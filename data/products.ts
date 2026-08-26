@@ -1,3 +1,5 @@
+import { publicPath } from "@/lib/public-path";
+
 export type Product = {
   id: number; name: string; slug: string; description: string; price: number; category: string;
   rating: number; reviews: number; badge?: "NEW" | "BEST SELLER" | "POPULAR" | "HEALTHY PICK" | "LIMITED" | "VEGAN";
@@ -9,7 +11,7 @@ const nutrition = (calories: number, protein: number, fibre: number, sugar: numb
   { label: "Calories", value: `${calories} kcal` }, { label: "Protein", value: `${protein}g` },
   { label: "Fibre", value: `${fibre}g` }, { label: "Sugar", value: `${sugar}g` }
 ];
-const p = (id: number, name: string, slug: string, description: string, price: number, category: string, art: string, rating: number, reviews: number, badge: Product["badge"], ingredients: string[], benefits: string[], allergens: string[], perfectFor: string[], stats: number[]): Product => ({ id,name,slug,description,price,category,art,image:`/products/${art}.jpg`,rating,reviews,badge,ingredients,benefits,allergens,perfectFor,nutrition:nutrition(stats[0],stats[1],stats[2],stats[3]) });
+const p = (id: number, name: string, slug: string, description: string, price: number, category: string, art: string, rating: number, reviews: number, badge: Product["badge"], ingredients: string[], benefits: string[], allergens: string[], perfectFor: string[], stats: number[]): Product => ({ id,name,slug,description,price,category,art,image:`${publicPath}/products/${art}.jpg`,rating,reviews,badge,ingredients,benefits,allergens,perfectFor,nutrition:nutrition(stats[0],stats[1],stats[2],stats[3]) });
 
 export const products: Product[] = [
   p(1,"NIBBLY Berry Granola","nibbly-berry-granola","Sweet-tangy berry clusters with crunchy almonds and wholesome oats.",149,"Granola","berry-granola",4.9,184,"BEST SELLER",["Oats","Strawberry","Blueberry","Almond"],["High fibre","Real fruit","No refined sugar"],["Almond","Gluten"],["Morning snack","Study"],[175,5,5,7]),
