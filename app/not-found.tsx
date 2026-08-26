@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function NotFound(){return <main className="grid min-h-[65vh] place-items-center px-5 text-center"><div><span className="text-7xl">🍃</span><h1 className="mt-4 font-display text-5xl text-forest">Oops, this bite<br/>went missing.</h1><p className="mt-3 text-sm text-stone-500">Let’s get you back to the good stuff.</p><Link href="/shop" className="mt-6 inline-block rounded-full bg-forest px-6 py-3 text-sm font-bold text-cream">Browse NIBBLY</Link></div></main>}

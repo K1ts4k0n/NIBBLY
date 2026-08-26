@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --font-display: "Fraunces"; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: #F1E5CD; color: #354B2D; font-family: "DM Sans", Arial, sans-serif; }
+::selection { background: #FFD95A; color: #354B2D; }
+.noise { background-image: radial-gradient(rgba(71, 79, 36, .1) .7px, transparent .7px); background-size: 12px 12px; }
+.leaf-shape { border-radius: 68% 32% 65% 35% / 49% 60% 40% 51%; }
+.blob { border-radius: 64% 36% 49% 51% / 41% 55% 45% 59%; }
+.grid-dots { background-image: radial-gradient(#c7b37d 1px, transparent 1px); background-size: 13px 13px; }
+@keyframes drift { 0%,100%{ transform:translateY(0) rotate(-4deg)} 50% {transform:translateY(-15px) rotate(4deg)} }
+.drift { animation: drift 5s ease-in-out infinite; }
+.drift-slow { animation: drift 7s ease-in-out 1s infinite; }
+@keyframes wiggle { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(8deg)} }
+.wiggle { animation: wiggle 3s ease-in-out infinite; }
+.rainbow-border { background: linear-gradient(120deg,#FF718D,#A678FF,#6EC8FF,#8BC34A,#FFD95A); padding: 2px; }
+
+/* Keeps the playful palette warm and gentle instead of overly bright. */
+.product-art { background-color: #d8c7a2; }

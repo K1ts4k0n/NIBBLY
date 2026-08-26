@@ -1,0 +1,3 @@
+"use client";
+import { useLanguage } from "@/components/providers/language-provider";
+export function LanguageToggle(){const {lang,setLang}=useLanguage();return <div role="group" aria-label="Language" className="flex rounded-full border border-[#d4c49d] bg-[#efe4cc] p-0.5 text-[10px] font-extrabold"><button onClick={()=>setLang("th")} className={`rounded-full px-2.5 py-1.5 transition ${lang==="th"?"bg-[#354B2D] text-white":"text-[#354B2D]/70"}`}>TH</button><button onClick={()=>setLang("en")} className={`rounded-full px-2.5 py-1.5 transition ${lang==="en"?"bg-[#354B2D] text-white":"text-[#354B2D]/70"}`}>EN</button></div>}
