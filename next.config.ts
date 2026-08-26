@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  images: { formats: ["image/avif", "image/webp"] },
+  output: "export",
+  trailingSlash: true,
+  basePath: process.env.GITHUB_ACTIONS === "true" ? "/NIBBLY" : "",
+  images: { unoptimized: true },
 };
 
 export default nextConfig;
