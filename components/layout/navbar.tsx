@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, Search, ShoppingBag, UserRound, X, Sparkles, LogOut, Compass, ChevronDown } from "lucide-react";
+import { Menu, Search, ShoppingBag, UserRound, X, Sparkles, LogOut, Compass, ChevronDown, UserCheck } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useCart } from "@/components/providers/cart-provider";
@@ -39,7 +39,9 @@ export function Navbar() {
       highlight: true,
     },
     {
-      label: lang === "th" ? "สมัครสมาชิก" : "Sign Up",
+      label: isLoggedIn
+        ? (lang === "th" ? "ข้อมูลของฉัน" : "My Profile")
+        : (lang === "th" ? "สมัครสมาชิก" : "Sign Up"),
       href: "/register",
     },
     { label: t("story"), href: "/#about" },
@@ -100,7 +102,7 @@ export function Navbar() {
                   className="flex items-center gap-1.5 rounded-full border border-[#d8c79e]/80 bg-white/90 px-3 py-1.5 text-xs font-bold text-[#354B2D] shadow-2xs transition hover:bg-white"
                 >
                   <span className="text-base leading-none">{user.avatar || "🍓"}</span>
-                  <span className="max-w-[90px] truncate">{user.name.split(" ")[0]}</span>
+                  <span className="max-w-[100px] truncate">{lang === "th" ? "ข้อมูลของฉัน" : "My Profile"}</span>
                   <ChevronDown size={14} className="text-stone-400" />
                 </button>
 
@@ -117,7 +119,7 @@ export function Navbar() {
                         <p className="text-xs font-bold text-[#354B2D]">{user.name}</p>
                         <p className="truncate text-[10px] text-stone-500">{user.email}</p>
                         <p className="mt-1 inline-block rounded bg-[#FFF0F3] px-2 py-0.5 text-[10px] font-bold text-[#FF718D]">
-                          {user.welcomeCoupon ? "โค้ดลด 15% พร้อมใช้" : "สมาชิก NIBBLY"}
+                          {lang === "th" ? "สมาชิก NIBBLY" : "NIBBLY Member"}
                         </p>
                       </div>
 
@@ -128,7 +130,7 @@ export function Navbar() {
                           className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-[#354B2D] transition hover:bg-[#FFF9E9]"
                         >
                           <UserRound size={15} />
-                          <span>{lang === "th" ? "โปรไฟล์สมาชิก & ส่วนลด" : "Member Profile"}</span>
+                          <span>{lang === "th" ? "ข้อมูลของฉัน & ส่วนลด" : "My Profile & Coupons"}</span>
                         </Link>
 
                         <Link
@@ -164,7 +166,7 @@ export function Navbar() {
                 className="flex items-center gap-1.5 rounded-full border border-[#d8c79e]/70 bg-white/70 px-3 py-1.5 text-xs font-bold text-[#354B2D] transition hover:bg-white hover:text-[#c77725]"
               >
                 <UserRound size={16} />
-                <span>{lang === "th" ? "สมัคร / เข้าสู่ระบบ" : "Sign In"}</span>
+                <span>{lang === "th" ? "สมัครสมาชิก" : "Sign Up"}</span>
               </Link>
             )}
           </div>
@@ -210,7 +212,7 @@ export function Navbar() {
                   <span className="text-2xl">{user.avatar}</span>
                   <div>
                     <p className="text-xs font-bold text-[#354B2D]">{user.name}</p>
-                    <p className="text-[10px] text-stone-500">{user.email}</p>
+                    <p className="text-[10px] text-stone-500">{lang === "th" ? "ข้อมูลของฉัน" : "My Profile"}</p>
                   </div>
                 </div>
                 <button

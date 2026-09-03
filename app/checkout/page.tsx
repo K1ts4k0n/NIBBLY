@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -12,6 +12,7 @@ import {
   CreditCard,
   Gift,
   HelpCircle,
+  Lock,
   MapPin,
   Minus,
   Package,
@@ -24,6 +25,8 @@ import {
   Trash2,
   Truck,
   User,
+  UserCheck,
+  UserPlus,
   Wallet,
   X,
 } from "lucide-react";
@@ -86,19 +89,45 @@ export default function CheckoutPage() {
   const [postalCode, setPostalCode] = useState("10110");
   const [notes, setNotes] = useState("");
 
+  // Sync user profile data if user changes
+  useEffect(() => {
+    if (user) {
+      if (!name) setName(user.name);
+      if (!email) setEmail(user.email);
+      if (!phone && user.phone) setPhone(user.phone);
+    }
+  }, [user]);
+
   // Shipping & Payment Options
   const [shippingMethod, setShippingMethod] = useState<"standard" | "express">("standard");
   const [paymentMethod, setPaymentMethod] = useState<"promptpay" | "card" | "cod" | "truemoney">("promptpay");
 
   // Promo Code State
-  const [promoInput, setPromoInput] = useState(user?.welcomeCoupon || "NIBBLYWELCOME15");
-  const [appliedPromo, setAppliedPromo] = useState<PromoCodeDef | null>(
-    user?.welcomeCoupon ? AVAILABLE_PROMOS[0] : null
-  );
+  const [promoInput, setPromoInput] = useState(isLoggedIn ? user?.welcomeCoupon || "NIBBLYWELCOME15" : "");
+  const [appliedPromo, setAppliedPromo] = useState<PromoCodeDef | null>(null);
   const [promoError, setPromoError] = useState("");
-  const [promoSuccess, setPromoSuccess] = useState(
-    user?.welcomeCoupon ? "ใช้โค้ดส่วนลด 15% เรียบร้อยแล้ว!" : ""
-  );
+  const [promoSuccess, setPromoSuccess] = useState("");
+
+  // If user logs in and has coupon, auto apply
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      const defaultCode = user.welcomeCoupon || "NIBBLYWELCOME15";
+      const found = AVAILABLE_PROMOS.find((p) => p.code.toUpperCase() === defaultCode.toUpperCase());
+      if (found && !appliedPromo) {
+        setAppliedPromo(found);
+        setPromoInput(found.code);
+        setPromoSuccess(
+          lang === "th"
+            ? `ใช้โค้ดสมาชิก ${found.code} สำเร็จ! (${found.labelTh})`
+            : `Member code ${found.code} applied! (${found.labelEn})`
+        );
+      }
+    } else {
+      // Not logged in -> cannot have applied promo
+      setAppliedPromo(null);
+      setPromoSuccess("");
+    }
+  }, [isLoggedIn, user]);
 
   // Order Placement State
   const [isProcessing, setIsProcessing] = useState(false);
@@ -139,6 +168,17 @@ export default function CheckoutPage() {
     const code = (codeToApply || promoInput).trim().toUpperCase();
     setPromoError("");
     setPromoSuccess("");
+
+    // Requirement: If not logged in / not registered, cannot use discounts
+    if (!isLoggedIn || !user) {
+      setAppliedPromo(null);
+      setPromoError(
+        lang === "th"
+          ? "เฉพาะสมาชิก NIBBLY เท่านั้นที่สามารถใช้โค้ดส่วนลดได้ กรุณาสมัครสมาชิกหรือเข้าสู่ระบบก่อน"
+          : "Discounts are exclusive to NIBBLY members. Please sign up or log in first."
+      );
+      return;
+    }
 
     if (!code) {
       setPromoError(lang === "th" ? "กรุณากรอกโค้ดส่วนลด" : "Please enter a promo code");
@@ -182,7 +222,8 @@ export default function CheckoutPage() {
   let discountAmount = 0;
   let shippingFee = baseShippingFee;
 
-  if (appliedPromo) {
+  // Only apply discount if user is logged in
+  if (isLoggedIn && appliedPromo) {
     if (appliedPromo.type === "percent") {
       discountAmount = Math.round((subtotal * appliedPromo.value) / 100);
     } else if (appliedPromo.type === "fixed") {
@@ -328,7 +369,7 @@ export default function CheckoutPage() {
               {completedOrderData.discountAmount > 0 && (
                 <div className="flex justify-between font-bold text-[#FF718D]">
                   <span>
-                    {lang === "th" ? "ส่วนลดโปรโมชั่น" : "Discount"} ({completedOrderData.promoCode})
+                    {lang === "th" ? "ส่วนลดโปรโมชั่นสมาชิก" : "Member Discount"} ({completedOrderData.promoCode})
                   </span>
                   <span>-฿{completedOrderData.discountAmount}</span>
                 </div>
@@ -381,11 +422,11 @@ export default function CheckoutPage() {
               </Link>
 
               <Link
-                href="/recommend"
+                href="/register"
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-[#354B2D] bg-white py-3.5 text-sm font-bold text-[#354B2D] shadow-xs transition hover:bg-[#FFF9E9]"
               >
-                <Sparkles size={16} className="text-[#FF718D]" />
-                <span>{lang === "th" ? "ดูเมนูแนะนำสุขภาพ" : "Explore Recommendations"}</span>
+                <UserCheck size={16} className="text-[#FF718D]" />
+                <span>{lang === "th" ? "ข้อมูลของฉัน" : "My Profile"}</span>
               </Link>
             </div>
           </motion.div>
@@ -450,9 +491,26 @@ export default function CheckoutPage() {
             <span>{lang === "th" ? "เลือกซื้อขนมต่อ" : "Back to Shop"}</span>
           </Link>
 
-          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-bold text-emerald-800">
-            <ShieldCheck size={14} />
-            <span>{lang === "th" ? "ชำระเงินปลอดภัย 100%" : "100% Secure Checkout"}</span>
+          <div className="flex items-center gap-2">
+            {isLoggedIn && user ? (
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
+                <span>{user.avatar || "🍓"}</span>
+                <span>{lang === "th" ? `เข้าสู่ระบบในชื่อ ${user.name}` : `Logged in as ${user.name}`}</span>
+              </div>
+            ) : (
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#FF718D] bg-[#FFF0F3] px-3 py-1 text-xs font-bold text-[#FF718D] transition hover:bg-[#FF718D] hover:text-white"
+              >
+                <UserPlus size={13} />
+                <span>{lang === "th" ? "สมัครสมาชิกเพื่อรับสิทธิ์ลด 15%" : "Sign up for 15% off"}</span>
+              </Link>
+            )}
+
+            <div className="hidden sm:inline-flex items-center gap-2 rounded-full bg-white/80 px-3.5 py-1 text-xs font-bold text-stone-700 shadow-2xs">
+              <ShieldCheck size={14} className="text-emerald-600" />
+              <span>{lang === "th" ? "ชำระเงินปลอดภัย" : "Secure Checkout"}</span>
+            </div>
           </div>
         </div>
 
@@ -616,7 +674,7 @@ export default function CheckoutPage() {
                       {lang === "th" ? "จัดส่งด่วนมาตรฐาน" : "Standard Express"}
                     </span>
                     <span className="font-bold text-emerald-700">
-                      {subtotal >= 500 || (appliedPromo?.type === "freeship") ? (
+                      {subtotal >= 500 || (isLoggedIn && appliedPromo?.type === "freeship") ? (
                         lang === "th" ? "ส่งฟรี" : "FREE"
                       ) : (
                         "฿40"
@@ -774,13 +832,46 @@ export default function CheckoutPage() {
 
               {/* Promo Code Input Section */}
               <div className="mt-5 border-t border-stone-200/80 pt-5">
-                <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#354B2D]">
-                  <Tag size={14} className="text-[#FF718D]" />
-                  <span>{lang === "th" ? "โค้ดส่วนลด / โปรโมชั่น" : "Promo Code"}</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#354B2D]">
+                    <Tag size={14} className="text-[#FF718D]" />
+                    <span>{lang === "th" ? "โค้ดส่วนลด / โปรโมชั่น" : "Promo Code"}</span>
+                  </label>
+
+                  {/* Member Badge indicator */}
+                  {isLoggedIn ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                      <CheckCircle2 size={11} /> {lang === "th" ? "สิทธิ์สมาชิก" : "Member Active"}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">
+                      <Lock size={11} /> {lang === "th" ? "เฉพาะสมาชิก" : "Members Only"}
+                    </span>
+                  )}
+                </div>
+
+                {/* Non-member callout banner */}
+                {!isLoggedIn && (
+                  <div className="mt-2.5 rounded-2xl border border-amber-300 bg-[#FFF8E6] p-3 text-xs">
+                    <p className="font-bold text-[#354B2D]">
+                      🔒 {lang === "th" ? "ยังไม่ได้เข้าสู่ระบบสมาชิก" : "Not logged in"}
+                    </p>
+                    <p className="mt-1 text-[11px] text-stone-600">
+                      {lang === "th"
+                        ? "ส่วนลด 15% และโค้ดโปรโมชั่นสงวนสิทธิ์เฉพาะสมาชิก NIBBLY เท่านั้น สมัครฟรีใน 1 นาที!"
+                        : "Promo discounts are exclusive for registered members. Sign up free in 1 minute!"}
+                    </p>
+                    <Link
+                      href="/register"
+                      className="mt-2 inline-flex items-center gap-1 font-bold text-[#FF718D] underline hover:text-[#c65752]"
+                    >
+                      <span>{lang === "th" ? "👉 สมัครสมาชิกเพื่อรับส่วนลด 15%" : "👉 Sign up to claim 15% off"}</span>
+                    </Link>
+                  </div>
+                )}
 
                 {/* Promo Input Box */}
-                <div className="mt-2 flex gap-2">
+                <div className="mt-2.5 flex gap-2">
                   <input
                     type="text"
                     value={promoInput}
@@ -788,7 +879,15 @@ export default function CheckoutPage() {
                       setPromoInput(e.target.value);
                       setPromoError("");
                     }}
-                    placeholder={lang === "th" ? "เช่น NIBBLYWELCOME15" : "e.g. NIBBLYWELCOME15"}
+                    placeholder={
+                      isLoggedIn
+                        ? lang === "th"
+                          ? "เช่น NIBBLYWELCOME15"
+                          : "e.g. NIBBLYWELCOME15"
+                        : lang === "th"
+                        ? "กรุณาสมัครสมาชิกก่อนใช้โค้ด"
+                        : "Members only"
+                    }
                     className="flex-1 rounded-2xl border border-[#d8c79e] bg-white px-4 py-2.5 text-xs font-mono font-bold uppercase text-[#354B2D] shadow-xs outline-none focus:border-[#354B2D] focus:ring-2 focus:ring-[#354B2D]/10"
                   />
                   <button
@@ -802,10 +901,20 @@ export default function CheckoutPage() {
 
                 {/* Promo Validation Messages */}
                 {promoError && (
-                  <p className="mt-2 text-xs font-medium text-red-600">⚠️ {promoError}</p>
+                  <div className="mt-2 rounded-xl bg-red-50 p-2.5 text-xs font-medium text-red-600 border border-red-200">
+                    <p>⚠️ {promoError}</p>
+                    {!isLoggedIn && (
+                      <Link
+                        href="/register"
+                        className="mt-1 inline-block font-bold text-[#FF718D] underline"
+                      >
+                        {lang === "th" ? "ไปที่หน้าสมัครสมาชิกคลิกที่นี่" : "Go to Sign Up page"}
+                      </Link>
+                    )}
+                  </div>
                 )}
 
-                {appliedPromo && (
+                {isLoggedIn && appliedPromo && (
                   <div className="mt-2.5 flex items-center justify-between rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800">
                     <span className="flex items-center gap-1.5">
                       <CheckCircle2 size={15} />
@@ -823,10 +932,10 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* Quick Coupon Chips */}
+                {/* Quick Coupon Chips (If logged in, or click to prompt) */}
                 <div className="mt-3">
                   <p className="text-[11px] font-bold text-stone-500">
-                    {lang === "th" ? "โค้ดแนะนำที่สามารถใช้ได้:" : "Available Promo Codes:"}
+                    {lang === "th" ? "โค้ดแนะนำสำหรับสมาชิก:" : "Member Promo Codes:"}
                   </p>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {AVAILABLE_PROMOS.map((p) => (
@@ -835,7 +944,7 @@ export default function CheckoutPage() {
                         type="button"
                         onClick={() => handleApplyPromo(p.code)}
                         className={`rounded-lg border px-2.5 py-1 text-[10px] font-bold transition ${
-                          appliedPromo?.code === p.code
+                          isLoggedIn && appliedPromo?.code === p.code
                             ? "border-emerald-500 bg-emerald-100 text-emerald-900 font-extrabold"
                             : "border-stone-200 bg-white text-stone-700 hover:bg-[#FFF9E9]"
                         }`}
@@ -854,13 +963,20 @@ export default function CheckoutPage() {
                   <span className="font-semibold text-stone-800">฿{subtotal}</span>
                 </div>
 
-                {discountAmount > 0 && (
+                {isLoggedIn && discountAmount > 0 ? (
                   <div className="flex justify-between font-bold text-[#FF718D]">
                     <span>
-                      {lang === "th" ? "ส่วนลดโปรโมชั่น" : "Discount"} ({appliedPromo?.code})
+                      {lang === "th" ? "ส่วนลดโปรโมชั่นสมาชิก" : "Member Discount"} ({appliedPromo?.code})
                     </span>
                     <span>-฿{discountAmount}</span>
                   </div>
+                ) : (
+                  !isLoggedIn && (
+                    <div className="flex justify-between text-[11px] text-stone-400 italic">
+                      <span>{lang === "th" ? "ส่วนลดสมาชิก (ยังไม่ได้ล็อกอิน)" : "Member Discount (Not logged in)"}</span>
+                      <span>฿0</span>
+                    </div>
+                  )
                 )}
 
                 <div className="flex justify-between text-stone-600">
@@ -888,7 +1004,7 @@ export default function CheckoutPage() {
                     <span className="font-display text-3xl font-extrabold text-[#354B2D]">
                       ฿{grandTotal}
                     </span>
-                    {discountAmount > 0 && (
+                    {isLoggedIn && discountAmount > 0 && (
                       <p className="text-[11px] font-bold text-emerald-600">
                         {lang === "th" ? `ประหยัดไปได้ ฿${discountAmount}` : `You saved ฿${discountAmount}`}
                       </p>
