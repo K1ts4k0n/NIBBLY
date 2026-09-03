@@ -1,23 +1,144 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..800;1,9..40,400..800&family=Fraunces:ital,opsz,wght@0,9..144,500..900;1,9..144,500..900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root { --font-display: "Fraunces"; }
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: #F1E5CD; color: #354B2D; font-family: "DM Sans", Arial, sans-serif; }
-::selection { background: #FFD95A; color: #354B2D; }
-.noise { background-image: radial-gradient(rgba(71, 79, 36, .1) .7px, transparent .7px); background-size: 12px 12px; }
-.leaf-shape { border-radius: 68% 32% 65% 35% / 49% 60% 40% 51%; }
-.blob { border-radius: 64% 36% 49% 51% / 41% 55% 45% 59%; }
-.grid-dots { background-image: radial-gradient(#c7b37d 1px, transparent 1px); background-size: 13px 13px; }
-@keyframes drift { 0%,100%{ transform:translateY(0) rotate(-4deg)} 50% {transform:translateY(-15px) rotate(4deg)} }
+:root {
+  --font-display: "Fraunces", serif;
+  --font-sans: "DM Sans", "Plus Jakarta Sans", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #F1E5CD;
+  color: #354B2D;
+  font-family: var(--font-sans), Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: #FFD95A;
+  color: #354B2D;
+}
+
+/* Texture overlays */
+.noise {
+  background-image: radial-gradient(rgba(71, 79, 36, 0.08) 0.7px, transparent 0.7px);
+  background-size: 12px 12px;
+}
+
+.leaf-shape {
+  border-radius: 68% 32% 65% 35% / 49% 60% 40% 51%;
+}
+
+.blob {
+  border-radius: 64% 36% 49% 51% / 41% 55% 45% 59%;
+}
+
+.grid-dots {
+  background-image: radial-gradient(#c7b37d 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+/* Animations */
+@keyframes drift {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-12px) rotate(3deg); }
+}
 .drift { animation: drift 5s ease-in-out infinite; }
 .drift-slow { animation: drift 7s ease-in-out 1s infinite; }
-@keyframes wiggle { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(8deg)} }
-.wiggle { animation: wiggle 3s ease-in-out infinite; }
-.rainbow-border { background: linear-gradient(120deg,#FF718D,#A678FF,#6EC8FF,#8BC34A,#FFD95A); padding: 2px; }
 
-/* Keeps the playful palette warm and gentle instead of overly bright. */
-.product-art { background-color: #d8c7a2; }
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+.float-slow { animation: float-slow 4s ease-in-out infinite; }
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(6deg); }
+}
+.wiggle { animation: wiggle 2.5s ease-in-out infinite; }
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.97); }
+}
+.pulse-soft { animation: pulse-soft 3s ease-in-out infinite; }
+
+/* Infinite Marquee Slide Bars */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 24s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee-slow {
+  display: flex;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+}
+
+.animate-marquee-slow:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee-reverse {
+  display: flex;
+  width: max-content;
+  animation: marquee-reverse 26s linear infinite;
+}
+
+.animate-marquee-reverse:hover {
+  animation-play-state: paused;
+}
+
+/* Gradient Borders & Shadows */
+.rainbow-border {
+  background: linear-gradient(120deg, #FF718D, #A678FF, #6EC8FF, #8BC34A, #FFD95A);
+  padding: 2px;
+}
+
+.rainbow-border-thick {
+  background: linear-gradient(135deg, #FF718D, #FFD95A, #8BC34A, #6EC8FF, #A678FF);
+  padding: 3px;
+}
+
+.soft-glow-pink {
+  box-shadow: 0 10px 30px rgba(255, 113, 141, 0.22);
+}
+
+.soft-glow-green {
+  box-shadow: 0 10px 30px rgba(53, 75, 45, 0.18);
+}
+
+.soft-glow-yellow {
+  box-shadow: 0 10px 30px rgba(255, 217, 90, 0.25);
+}
+
+/* Product art base */
+.product-art {
+  background-color: #d8c7a2;
+}
