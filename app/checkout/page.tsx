@@ -48,6 +48,13 @@ interface PromoCodeDef {
 
 const AVAILABLE_PROMOS: PromoCodeDef[] = [
   {
+    code: "NIBBLYCRUSH30",
+    type: "percent",
+    value: 30,
+    labelTh: "🎉 ลด 30% ผู้ชนะเกม Snack Crush!",
+    labelEn: "🎉 30% Off Snack Crush Champion!",
+  },
+  {
     code: "NIBBLYWELCOME15",
     type: "percent",
     value: 15,

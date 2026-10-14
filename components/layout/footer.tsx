@@ -38,6 +38,7 @@ export function Footer() {
           title="Explore"
           links={[
             { label: "Home", href: "/" },
+            { label: "เล่นเกมส์รับส่วนลด 30% 🎮", href: "/game" },
             { label: "โปรโมชั่น & โค้ดส่วนลด 🔥", href: "/promotions" },
             { label: "Shop All Snacks", href: "/shop" },
             { label: "Snack Finder (แนะนำขนม)", href: "/recommend" },

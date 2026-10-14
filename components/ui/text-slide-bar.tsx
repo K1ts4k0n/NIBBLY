@@ -21,6 +21,11 @@ export function AnnouncementMarquee() {
 
   const announcements = [
     {
+      emoji: "🎮",
+      text: lang === "th" ? "เล่นเกม Candy Snack Crush ชนะรับโค้ดส่วนลด 30% ทันที! เล่นเลย" : "Play Snack Crush & Win 30% Off! Play Now",
+      link: "/game",
+    },
+    {
       emoji: "🎀",
       text: lang === "th" ? "โปรโมชั่นพิเศษ! ดีลเด็ด Flash Sale ลดสูงสุด 20% ช้อปเลย" : "Special Deals! Flash Sale & Bundles up to 20% off",
       link: "/promotions",

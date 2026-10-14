@@ -41,6 +41,13 @@ export function Navbar() {
       special: true,
     },
     {
+      label: lang === "th" ? "เล่นเกมลด 30%" : "Game 30% Off",
+      emoji: "🎮",
+      href: "/game",
+      badge: "30% 🎁",
+      isGame: true,
+    },
+    {
       label: lang === "th" ? "แนะนำขนมสุขภาพ" : "Snack Finder",
       emoji: "✨",
       href: "/recommend",
@@ -103,6 +110,22 @@ export function Navbar() {
                   <span className="text-sm transition-transform duration-200 group-hover:scale-125">{item.emoji}</span>
                   <span>{item.label}</span>
                   <span className="rounded-full bg-[#FF5722] px-1.5 py-0.5 text-[9px] font-black text-white shadow-xs">
+                    {item.badge}
+                  </span>
+                </Link>
+              );
+            }
+
+            if (item.isGame) {
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="group relative inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#BCE1FF] bg-[#EBF6FF] px-3 py-1.5 text-xs font-black text-[#0066CC] shadow-2xs transition-all duration-200 hover:scale-105 hover:bg-[#2596FF] hover:text-white"
+                >
+                  <span className="text-sm transition-transform duration-200 group-hover:scale-125">{item.emoji}</span>
+                  <span>{item.label}</span>
+                  <span className="rounded-full bg-[#0066CC] group-hover:bg-[#FFD95A] group-hover:text-[#2D4125] px-1.5 py-0.5 text-[9px] font-black text-white shadow-xs">
                     {item.badge}
                   </span>
                 </Link>
