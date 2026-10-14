@@ -39,6 +39,17 @@ interface Tile {
   borderCol: string;
 }
 
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  color: string;
+  size: number;
+  emoji?: string;
+}
+
 const SNACK_ITEMS: Record<SnackType, Omit<Tile, "id">> = {
   strawberry: {
     type: "strawberry",
@@ -104,7 +115,7 @@ const TARGET_SCORE = 1000;
 const INITIAL_MOVES = 22;
 const PROMO_CODE_30 = "NIBBLYCRUSH30";
 
-// Sound synthesizer using Web Audio API with safe browser fallback
+// High-performance sound synthesizer
 class SoundFX {
   private ctx: AudioContext | null = null;
   public enabled = true;
@@ -118,9 +129,7 @@ class SoundFX {
       if (this.ctx && this.ctx.state === "suspended") {
         this.ctx.resume().catch(() => {});
       }
-    } catch {
-      // AudioContext may be restricted by browser policy
-    }
+    } catch {}
   }
 
   playPop(pitch = 520) {
@@ -132,13 +141,13 @@ class SoundFX {
       const gain = this.ctx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(pitch, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(pitch * 1.4, this.ctx.currentTime + 0.12);
-      gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+      osc.frequency.exponentialRampToValueAtTime(pitch * 1.45, this.ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.22, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.12);
+      osc.stop(this.ctx.currentTime + 0.1);
     } catch {}
   }
 
@@ -152,7 +161,7 @@ class SoundFX {
       osc.type = "triangle";
       osc.frequency.setValueAtTime(320, this.ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(540, this.ctx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+      gain.gain.setValueAtTime(0.14, this.ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
@@ -170,13 +179,13 @@ class SoundFX {
       const gain = this.ctx.createGain();
       osc.type = "sawtooth";
       osc.frequency.setValueAtTime(260, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(140, this.ctx.currentTime + 0.16);
+      osc.frequency.exponentialRampToValueAtTime(140, this.ctx.currentTime + 0.15);
       gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.16);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.16);
+      osc.stop(this.ctx.currentTime + 0.15);
     } catch {}
   }
 
@@ -188,14 +197,14 @@ class SoundFX {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = "sine";
-      osc.frequency.setValueAtTime(180, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.3);
+      osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.28);
       gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.28);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.3);
+      osc.stop(this.ctx.currentTime + 0.28);
     } catch {}
   }
 
@@ -223,11 +232,21 @@ class SoundFX {
 
 const sfx = new SoundFX();
 
+// Haptic feedback helper
+const triggerHaptic = (pattern: number | number[] = 15) => {
+  if (typeof window !== "undefined" && typeof navigator !== "undefined" && navigator.vibrate) {
+    try {
+      navigator.vibrate(pattern);
+    } catch {}
+  }
+};
+
 export default function SnackCrushGame() {
   const [grid, setGrid] = useState<Tile[][]>([]);
   const [selectedPos, setSelectedPos] = useState<{ r: number; c: number } | null>(null);
   const [hintPair, setHintPair] = useState<[{ r: number; c: number }, { r: number; c: number }] | null>(null);
   const [invalidPair, setInvalidPair] = useState<[{ r: number; c: number }, { r: number; c: number }] | null>(null);
+  const [matchingCoords, setMatchingCoords] = useState<Set<string>>(new Set());
   const [isResolving, setIsResolving] = useState(false);
   const [score, setScore] = useState(0);
   const [moves, setMoves] = useState(INITIAL_MOVES);
@@ -237,9 +256,12 @@ export default function SnackCrushGame() {
   const [bombMode, setBombMode] = useState(false);
   const [bombsLeft, setBombsLeft] = useState(2);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [comboBanner, setComboBanner] = useState<{ text: string; sub: string } | null>(null);
+  const [particles, setParticles] = useState<Particle[]>([]);
   const [floatingPoints, setFloatingPoints] = useState<{ id: number; text: string; x: number; y: number }[]>([]);
 
   const pointCounterRef = useRef(0);
+  const particleIdRef = useRef(0);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const dragStartRef = useRef<{ r: number; c: number; x: number; y: number } | null>(null);
 
@@ -320,7 +342,6 @@ export default function SnackCrushGame() {
             const nr = r + dr;
             const nc = c + dc;
             if (nr < GRID_SIZE && nc < GRID_SIZE) {
-              // Test hypothetical swap
               const temp = board.map((row) => [...row]);
               const t = temp[r][c];
               temp[r][c] = temp[nr][nc];
@@ -340,6 +361,38 @@ export default function SnackCrushGame() {
     },
     [findMatches]
   );
+
+  // Spawn juice sparkle particles
+  const spawnParticles = useCallback((coords: { r: number; c: number }[], board: Tile[][]) => {
+    const newParticles: Particle[] = [];
+    const colors = ["#FF4D6D", "#FFB703", "#06D6A0", "#4361EE", "#A855F7", "#FF758F"];
+    const sparkles = ["✨", "⭐️", "🌟", "🍓", "🫐", "🍬"];
+
+    coords.slice(0, 6).forEach(({ r, c }) => {
+      const tile = board[r]?.[c];
+      const baseColor = tile?.color || "#FFD95A";
+
+      for (let i = 0; i < 5; i++) {
+        const angle = (Math.PI * 2 * i) / 5 + (Math.random() - 0.5);
+        const speed = 25 + Math.random() * 35;
+        newParticles.push({
+          id: particleIdRef.current++,
+          x: c * 48 + 24,
+          y: r * 48 + 24,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 15,
+          color: i % 2 === 0 ? baseColor : colors[Math.floor(Math.random() * colors.length)],
+          size: 6 + Math.random() * 6,
+          emoji: i === 0 ? sparkles[Math.floor(Math.random() * sparkles.length)] : undefined,
+        });
+      }
+    });
+
+    setParticles((prev) => [...prev.slice(-20), ...newParticles]);
+    setTimeout(() => {
+      setParticles([]);
+    }, 700);
+  }, []);
 
   // Build grid guaranteed to have at least 3 valid moves
   const initGrid = useCallback(() => {
@@ -374,10 +427,12 @@ export default function SnackCrushGame() {
     setSelectedPos(null);
     setHintPair(null);
     setInvalidPair(null);
+    setMatchingCoords(new Set());
     setIsResolving(false);
     setBombMode(false);
     setBombsLeft(2);
     setStatusMessage(null);
+    setComboBanner(null);
   }, [makeTile, findPossibleMoves]);
 
   useEffect(() => {
@@ -411,6 +466,7 @@ export default function SnackCrushGame() {
   // Shuffle board without moves penalty
   const shuffleBoard = (baseGrid = grid) => {
     sfx.playSwap();
+    triggerHaptic(20);
     let current = baseGrid.map((row) => [...row]);
     const allTiles: Tile[] = [];
     for (let r = 0; r < GRID_SIZE; r++) {
@@ -455,11 +511,13 @@ export default function SnackCrushGame() {
           setScore(finalScore);
           setGrid(current);
           setMoves(currentMoves);
+          setMatchingCoords(new Set());
           setIsResolving(false);
 
           if (finalScore >= TARGET_SCORE) {
             setGameState("won");
             sfx.playFanfare();
+            triggerHaptic([30, 60, 30, 80]);
           } else if (currentMoves <= 0) {
             setGameState("lost");
           } else {
@@ -469,14 +527,33 @@ export default function SnackCrushGame() {
               setTimeout(() => {
                 shuffleBoard(current);
                 setStatusMessage(null);
-              }, 1200);
+              }, 1100);
             }
           }
           return;
         }
 
         currentCombo++;
-        sfx.playPop(480 + currentCombo * 50);
+        sfx.playPop(480 + currentCombo * 55);
+        triggerHaptic(18 + currentCombo * 6);
+
+        // Visual flash & spawn particles on matched tiles
+        const coordSet = new Set(matches.map((m) => `${m.r},${m.c}`));
+        setMatchingCoords(coordSet);
+        spawnParticles(matches, current);
+
+        // Candy Crush style combo praises
+        if (currentCombo >= 2) {
+          const praises = [
+            { text: "✨ SWEET!", sub: "คอมโบสวยมาก!" },
+            { text: "🍓 DELICIOUS!", sub: "อร่อยสุขภาพดี!" },
+            { text: "🫐 SUGAR CRUSH!", sub: "ระเบิดแต้มรัวๆ!" },
+            { text: "🌈 SNACKTASTIC! 🧸", sub: "สุดยอดเซียนขนม!" },
+          ];
+          const chosenPraise = praises[Math.min(currentCombo - 2, praises.length - 1)];
+          setComboBanner(chosenPraise);
+          setTimeout(() => setComboBanner(null), 1200);
+        }
 
         // Add points
         const pts = matches.length * 40 * currentCombo;
@@ -490,53 +567,57 @@ export default function SnackCrushGame() {
           {
             id: ptId,
             text: `+${pts} ${currentCombo > 1 ? `Combo x${currentCombo}! 🔥` : ""}`,
-            x: centerMatch.c * 44 + 8,
-            y: centerMatch.r * 44,
+            x: centerMatch.c * 46 + 10,
+            y: centerMatch.r * 46,
           },
         ]);
         setTimeout(() => {
           setFloatingPoints((prev) => prev.filter((p) => p.id !== ptId));
-        }, 1100);
+        }, 1000);
 
-        // Clear matched tiles
-        matches.forEach(({ r, c }) => {
-          current[r][c] = null as any;
-        });
+        // Clear matched tiles after a quick pop delay
+        setTimeout(() => {
+          matches.forEach(({ r, c }) => {
+            current[r][c] = null as any;
+          });
 
-        // Gravity: drop down
-        for (let c = 0; c < GRID_SIZE; c++) {
-          let emptyRow = GRID_SIZE - 1;
-          for (let r = GRID_SIZE - 1; r >= 0; r--) {
-            if (current[r][c] !== null) {
-              if (emptyRow !== r) {
-                current[emptyRow][c] = current[r][c];
-                current[r][c] = null as any;
+          // Gravity: drop down
+          for (let c = 0; c < GRID_SIZE; c++) {
+            let emptyRow = GRID_SIZE - 1;
+            for (let r = GRID_SIZE - 1; r >= 0; r--) {
+              if (current[r][c] !== null) {
+                if (emptyRow !== r) {
+                  current[emptyRow][c] = current[r][c];
+                  current[r][c] = null as any;
+                }
+                emptyRow--;
               }
-              emptyRow--;
+            }
+            // Fill top empty with new tiles
+            for (let r = emptyRow; r >= 0; r--) {
+              current[r][c] = makeTile();
             }
           }
-          // Fill top empty with new tiles
-          for (let r = emptyRow; r >= 0; r--) {
-            current[r][c] = makeTile();
-          }
-        }
 
-        setGrid([...current.map((r) => [...r])]);
-        setTimeout(step, 240);
+          setGrid([...current.map((r) => [...r])]);
+          setMatchingCoords(new Set());
+          setTimeout(step, 200);
+        }, 150);
       };
 
       step();
     },
-    [findMatches, makeTile, findPossibleMoves]
+    [findMatches, makeTile, findPossibleMoves, spawnParticles]
   );
 
   // Bomb 3x3 explosion booster
   const handleBombTile = (r: number, c: number) => {
     if (bombsLeft <= 0 || isResolving) return;
     sfx.playBlast();
+    triggerHaptic([35, 50, 40]);
     setBombMode(false);
     setBombsLeft((prev) => prev - 1);
-    setStatusMessage("💥 บึ้ม! ระเบิดขนมสำเร็จ");
+    setStatusMessage("💥 บึ้ม! ระเบิดสแน็กกระจาย!");
     setTimeout(() => setStatusMessage(null), 1500);
 
     const nextGrid = grid.map((row) => [...row]);
@@ -553,14 +634,16 @@ export default function SnackCrushGame() {
       }
     }
 
+    spawnParticles(matched, grid);
+
     const blastPts = matched.length * 50;
     setFloatingPoints((prev) => [
       ...prev,
       {
         id: pointCounterRef.current++,
         text: `💥 +${blastPts} BOMB!`,
-        x: c * 44 + 8,
-        y: r * 44,
+        x: c * 46 + 10,
+        y: r * 46,
       },
     ]);
 
@@ -587,7 +670,6 @@ export default function SnackCrushGame() {
   // Swap execution
   const executeSwap = (r1: number, c1: number, r2: number, c2: number) => {
     if (gameState !== "playing" || moves <= 0 || isResolving) return;
-
     if (r2 < 0 || r2 >= GRID_SIZE || c2 < 0 || c2 >= GRID_SIZE) return;
 
     // Test swap
@@ -607,11 +689,13 @@ export default function SnackCrushGame() {
       setInvalidPair(null);
       setStatusMessage(null);
       sfx.playSwap();
+      triggerHaptic(15);
       const newMoves = moves - 1;
       resolveBoard(nextGrid, newMoves, score);
     } else {
       // Invalid swap: visually swap, shake & revert
       sfx.playBoing();
+      triggerHaptic([20, 30]);
       setSelectedPos(null);
       setHintPair(null);
       setInvalidPair([
@@ -628,11 +712,11 @@ export default function SnackCrushGame() {
         revertedGrid[r2][c2] = tileB;
         setGrid(revertedGrid);
         setInvalidPair(null);
-      }, 260);
+      }, 240);
 
       setTimeout(() => {
         setStatusMessage(null);
-      }, 3000);
+      }, 2500);
     }
   };
 
@@ -646,14 +730,13 @@ export default function SnackCrushGame() {
     }
 
     if (!selectedPos) {
-      // Select first tile
       setSelectedPos({ r, c });
       setHintPair(null);
       sfx.playSwap();
+      triggerHaptic(10);
       return;
     }
 
-    // Deselect if clicking the same tile
     if (selectedPos.r === r && selectedPos.c === c) {
       setSelectedPos(null);
       return;
@@ -664,13 +747,12 @@ export default function SnackCrushGame() {
     const isAdjacent = (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
 
     if (!isAdjacent) {
-      // Switch selection to new tile
       setSelectedPos({ r, c });
       sfx.playSwap();
+      triggerHaptic(10);
       return;
     }
 
-    // Adjacent -> Perform swap!
     executeSwap(selectedPos.r, selectedPos.c, r, c);
   };
 
@@ -690,12 +772,10 @@ export default function SnackCrushGame() {
     const dy = t.clientY - start.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist > 25) {
+    if (dist > 22) {
       if (Math.abs(dx) > Math.abs(dy)) {
-        // Horizontal swipe
         executeSwap(start.r, start.c, start.r, start.c + (dx > 0 ? 1 : -1));
       } else {
-        // Vertical swipe
         executeSwap(start.r, start.c, start.r + (dy > 0 ? 1 : -1), start.c);
       }
     }
@@ -708,6 +788,7 @@ export default function SnackCrushGame() {
       const chosen = valid[0];
       setHintPair(chosen);
       sfx.playPop(700);
+      triggerHaptic(15);
       setStatusMessage("💡 ลองสลับขนม 2 ชิ้นที่มีประกายสีทองดูเลยจ้า!");
       setTimeout(() => setStatusMessage(null), 3500);
     } else {
@@ -720,36 +801,49 @@ export default function SnackCrushGame() {
   const handleCopyCode = () => {
     navigator.clipboard.writeText(PROMO_CODE_30);
     setCopied(true);
+    triggerHaptic(20);
     setTimeout(() => setCopied(false), 2500);
   };
 
   const progressPercent = Math.min(100, Math.round((score / TARGET_SCORE) * 100));
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#B8E6FF] via-[#E2F5FF] to-[#FFF9ED] text-[#2C4026] relative overflow-x-hidden">
-      {/* Background Sweet Clouds */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 left-5 size-72 rounded-full bg-white/60 blur-3xl" />
-        <div className="absolute top-40 right-5 size-80 rounded-full bg-[#FF718D]/20 blur-3xl" />
-        <div className="absolute bottom-20 left-1/3 size-96 rounded-full bg-[#FFD95A]/25 blur-3xl" />
+    <div className="min-h-screen bg-gradient-to-br from-[#FFE4E6] via-[#E0F2FE] to-[#F3E8FF] text-[#2C4026] relative overflow-x-hidden selection:bg-[#FF718D] selection:text-white">
+      {/* Dynamic Colorful Floating Candies & Sparkling Sweet Background */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        {/* Soft Colorful Aura Spheres */}
+        <div className="absolute -top-24 -left-20 size-[380px] rounded-full bg-gradient-to-br from-[#FF758F]/35 to-[#FFD166]/25 blur-2xl" />
+        <div className="absolute top-1/4 -right-24 size-[420px] rounded-full bg-gradient-to-bl from-[#38BDF8]/30 to-[#818CF8]/25 blur-2xl" />
+        <div className="absolute -bottom-24 left-1/4 size-[460px] rounded-full bg-gradient-to-tr from-[#34D399]/25 to-[#F472B6]/30 blur-2xl" />
+
+        {/* Floating Snack Emoji Decorative Candies */}
+        <div className="absolute top-16 left-8 text-3xl opacity-60 animate-bounce duration-[4000ms]">🍓</div>
+        <div className="absolute top-36 right-10 text-4xl opacity-50 animate-bounce duration-[5000ms]">🧸</div>
+        <div className="absolute top-2/3 left-6 text-3xl opacity-55 animate-bounce duration-[4500ms]">🍌</div>
+        <div className="absolute top-1/2 right-8 text-3xl opacity-50 animate-bounce duration-[6000ms]">🫐</div>
+        <div className="absolute bottom-20 right-1/4 text-4xl opacity-50 animate-bounce duration-[5500ms]">🧁</div>
+        <div className="absolute bottom-16 left-12 text-3xl opacity-50 animate-bounce duration-[4200ms]">🥑</div>
+        <div className="absolute top-1/3 left-1/4 text-2xl opacity-40 animate-pulse">✨</div>
+        <div className="absolute top-24 right-1/3 text-2xl opacity-40 animate-pulse">🌈</div>
+        <div className="absolute bottom-1/3 right-12 text-2xl opacity-40 animate-pulse">🍭</div>
       </div>
 
       {/* Main Container */}
-      <div className="relative mx-auto max-w-4xl px-3 py-5 sm:px-6">
+      <div className="relative mx-auto max-w-4xl px-3 py-3.5 sm:py-5 sm:px-6 z-10">
         {/* Top Header Navigation */}
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/90 px-3.5 py-1.5 text-xs font-bold text-[#354B2D] shadow-xs backdrop-blur-md hover:bg-white transition"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/95 px-3 py-1.5 text-xs font-bold text-[#354B2D] shadow-sm hover:bg-white transition active:scale-95"
           >
             <ChevronLeft size={16} />
-            <span>กลับสู่ร้านค้า</span>
+            <span>กลับร้านค้า</span>
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={toggleSound}
-              className="flex size-9 items-center justify-center rounded-full border border-white/80 bg-white/90 text-stone-700 shadow-xs hover:bg-white transition"
+              className="flex size-8 sm:size-9 items-center justify-center rounded-full border border-white/80 bg-white/95 text-stone-700 shadow-sm hover:bg-white transition active:scale-95"
               title="เปิด/ปิดเสียง"
             >
               {soundOn ? <Volume2 size={16} className="text-[#354B2D]" /> : <VolumeX size={16} className="text-stone-400" />}
@@ -757,7 +851,7 @@ export default function SnackCrushGame() {
 
             <button
               onClick={initGrid}
-              className="flex items-center gap-1 rounded-full border border-white/80 bg-white/90 px-3 py-1.5 text-xs font-bold text-[#354B2D] shadow-xs hover:bg-white transition"
+              className="flex items-center gap-1 rounded-full border border-white/80 bg-white/95 px-3 py-1.5 text-xs font-bold text-[#354B2D] shadow-sm hover:bg-white transition active:scale-95"
             >
               <RotateCcw size={14} />
               <span>เริ่มใหม่</span>
@@ -765,30 +859,94 @@ export default function SnackCrushGame() {
           </div>
         </div>
 
-        {/* Game Title & Mission */}
-        <div className="mt-3 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#FF718D] px-4 py-1 text-xs font-black text-white shadow-md">
-            <Sparkles size={14} className="text-[#FFD95A] animate-spin-slow" />
+        {/* Game Title & Mission Banner */}
+        <div className="mt-2 sm:mt-3 text-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#FF4D6D] to-[#FF758F] px-3.5 py-1 text-[11px] sm:text-xs font-black text-white shadow-md">
+            <Sparkles size={13} className="text-[#FFE082] animate-spin-slow" />
             <span>NIBBLY SNACK CRUSH • เล่นชนะรับส่วนลด 30%!</span>
           </div>
 
-          <h1 className="mt-2 font-display text-2xl sm:text-4xl font-black text-[#263D20] tracking-tight">
-            แคนดี้สแน็ก <span className="bg-gradient-to-r from-[#FF718D] via-[#FF9F43] to-[#8BC34A] bg-clip-text text-transparent">ปาร์ตี้ผลไม้</span> 🍓🧸
+          <h1 className="mt-1 font-display text-2xl sm:text-4xl font-black text-[#263D20] tracking-tight">
+            แคนดี้สแน็ก <span className="bg-gradient-to-r from-[#FF4D6D] via-[#F59E0B] to-[#10B981] bg-clip-text text-transparent">ปาร์ตี้ผลไม้</span> 🍓🧸
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-stone-600 font-medium">
-            ใช้นิ้ว<b>ปัด (Swipe)</b> หรือ<b>แตะ 2 ชิ้น</b> เพื่อสลับขนมให้เรียงติดกัน 3 ชิ้นขึ้นไป ทำถึง <b>{TARGET_SCORE} คะแนน</b> รับโค้ดลด 30%!
+          <p className="text-[11px] sm:text-xs text-stone-600 font-medium">
+            ปัดสไลด์หรือแตะ 2 ชิ้นสลับให้เรียง 3 ชิ้นติดกัน ทำถึง <b>{TARGET_SCORE} แต้ม</b> ปลดล็อกโค้ดลด 30%!
           </p>
         </div>
 
+        {/* Compact Mobile Candy Top HUD (Visible on Mobile & Tablet) */}
+        <div className="mt-2.5 lg:hidden rounded-2xl bg-white/95 border-2 border-white/90 p-2.5 shadow-md">
+          <div className="flex items-center justify-between gap-2">
+            {/* Moves Candy Badge */}
+            <div className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0284C7] to-[#0369A1] px-3 py-1.5 text-white shadow-sm">
+              <span className="text-[10px] font-black uppercase tracking-wider opacity-80">Moves</span>
+              <span className="font-display text-xl font-black text-[#FFF3B0]">{moves}</span>
+            </div>
+
+            {/* Score & Target */}
+            <div className="flex-1 px-1">
+              <div className="flex items-center justify-between text-[11px] font-black">
+                <span className="text-stone-500">คะแนน:</span>
+                <span className="text-[#2D4125] font-mono text-xs">{score} / {TARGET_SCORE}</span>
+              </div>
+              <div className="mt-1 relative h-2.5 w-full overflow-hidden rounded-full bg-stone-100 border border-stone-200">
+                <div
+                  className="h-full bg-gradient-to-r from-[#FFD95A] via-[#FF9F43] to-[#FF4D6D] transition-all duration-300"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Stars */}
+            <div className="flex items-center gap-0.5 text-stone-300">
+              <Star size={14} className={score >= TARGET_SCORE * 0.33 ? "text-[#F59E0B] fill-[#F59E0B]" : ""} />
+              <Star size={16} className={score >= TARGET_SCORE * 0.66 ? "text-[#F59E0B] fill-[#F59E0B]" : ""} />
+              <Star size={18} className={score >= TARGET_SCORE ? "text-[#F59E0B] fill-[#F59E0B] animate-spin-slow" : ""} />
+            </div>
+          </div>
+
+          {/* Quick Boosters Row on Mobile */}
+          <div className="mt-2 pt-2 border-t border-stone-100 grid grid-cols-3 gap-1.5 text-center">
+            <button
+              onClick={handleShowHint}
+              disabled={isResolving}
+              className="flex items-center justify-center gap-1 rounded-xl bg-[#FFF9E6] border border-[#FFE082] py-1 px-2 text-[11px] font-black text-stone-700 active:scale-95 disabled:opacity-50"
+            >
+              <Lightbulb size={14} className="text-[#F59E0B]" />
+              <span>ใบ้คู่ ✨</span>
+            </button>
+            <button
+              onClick={() => shuffleBoard()}
+              disabled={isResolving}
+              className="flex items-center justify-center gap-1 rounded-xl bg-[#EBF5FF] border border-[#BCE1FF] py-1 px-2 text-[11px] font-black text-stone-700 active:scale-95 disabled:opacity-50"
+            >
+              <Shuffle size={14} className="text-[#0284C7]" />
+              <span>สับใหม่ 🔀</span>
+            </button>
+            <button
+              onClick={() => setBombMode(!bombMode)}
+              disabled={isResolving || bombsLeft <= 0}
+              className={`flex items-center justify-center gap-1 rounded-xl py-1 px-2 text-[11px] font-black active:scale-95 disabled:opacity-40 border ${
+                bombMode
+                  ? "bg-[#FF4D6D] text-white border-[#C9184A] animate-pulse"
+                  : "bg-[#FFF0F4] border-[#FFCCD8] text-stone-700"
+              }`}
+            >
+              <Bomb size={14} className={bombMode ? "text-white" : "text-[#E63946]"} />
+              <span>ระเบิด ({bombsLeft})</span>
+            </button>
+          </div>
+        </div>
+
         {/* Status Notification Banner */}
-        <div className="mt-2.5 min-h-[36px] flex items-center justify-center">
+        <div className="mt-2 min-h-[30px] flex items-center justify-center">
           <AnimatePresence>
             {statusMessage && (
               <motion.div
                 initial={{ opacity: 0, y: -6, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -6, scale: 0.95 }}
-                className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-1.5 text-xs font-bold text-[#D81159] shadow-lg border border-[#FFCCD8]"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1 text-xs font-bold text-[#D81159] shadow-md border border-[#FFCCD8]"
               >
                 <span>{statusMessage}</span>
               </motion.div>
@@ -798,17 +956,17 @@ export default function SnackCrushGame() {
 
         {/* Game Layout (Dashboard + Board) */}
         <div className="mt-2 grid gap-5 lg:grid-cols-[250px_1fr] items-start">
-          {/* Left: Candy Soda Style Dashboard Panel */}
-          <div className="space-y-3.5">
+          {/* Left: Candy Soda Style Dashboard Panel (Desktop only) */}
+          <div className="hidden lg:block space-y-3.5">
             {/* Moves & Gummy Bear Box */}
-            <div className="relative overflow-hidden rounded-3xl border-4 border-[#78C9FF] bg-gradient-to-b from-[#2596FF] via-[#0077E6] to-[#005AB3] p-4 sm:p-5 text-white shadow-xl shadow-[#0077E6]/25">
+            <div className="relative overflow-hidden rounded-3xl border-4 border-[#78C9FF] bg-gradient-to-b from-[#2596FF] via-[#0077E6] to-[#005AB3] p-4 text-white shadow-xl shadow-[#0077E6]/25">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black tracking-wider uppercase opacity-90">จำนวนครั้งที่สลับ</span>
                 <span className="text-xs font-mono font-bold bg-white/20 px-2 py-0.5 rounded-full">Moves</span>
               </div>
 
               {/* Big Moves Number */}
-              <div className="mt-2 text-center">
+              <div className="mt-1 text-center">
                 <span className="font-display text-5xl font-black tracking-tight text-[#FFF3B0] drop-shadow-md">
                   {moves}
                 </span>
@@ -816,7 +974,7 @@ export default function SnackCrushGame() {
               </div>
 
               {/* Mission Goal Cute Box */}
-              <div className="mt-3 rounded-2xl bg-white/15 p-3 backdrop-blur-xs border border-white/20 text-center">
+              <div className="mt-3 rounded-2xl bg-white/15 p-2.5 border border-white/20 text-center">
                 <div className="flex items-center justify-center gap-2">
                   <span className="text-2xl animate-bounce">🧸</span>
                   <div className="text-left">
@@ -828,18 +986,17 @@ export default function SnackCrushGame() {
             </div>
 
             {/* Score & Star Progress */}
-            <div className="rounded-3xl border-2 border-[#E8DCB8] bg-white/95 p-4 sm:p-5 shadow-lg shadow-black/5">
+            <div className="rounded-3xl border-2 border-[#E8DCB8] bg-white/95 p-4 shadow-lg shadow-black/5">
               <div className="flex items-center justify-between text-xs font-bold text-stone-600">
                 <span>คะแนนปัจจุบัน</span>
                 <span className="font-mono text-base font-black text-[#2D4125]">{score}</span>
               </div>
 
               {/* Star Progress Bar */}
-              <div className="mt-2.5 relative h-4 w-full overflow-hidden rounded-full bg-stone-100 border border-stone-200">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-[#FFD95A] via-[#FF9F43] to-[#FF718D]"
-                  animate={{ width: `${progressPercent}%` }}
-                  transition={{ duration: 0.3 }}
+              <div className="mt-2.5 relative h-3.5 w-full overflow-hidden rounded-full bg-stone-100 border border-stone-200">
+                <div
+                  className="h-full bg-gradient-to-r from-[#FFD95A] via-[#FF9F43] to-[#FF718D] transition-all duration-300"
+                  style={{ width: `${progressPercent}%` }}
                 />
               </div>
 
@@ -864,7 +1021,6 @@ export default function SnackCrushGame() {
             <div className="rounded-3xl border-2 border-[#E8DCB8] bg-white/95 p-3.5 shadow-md">
               <span className="text-xs font-black text-stone-700 block mb-2">⚡️ ตัวช่วยพิเศษ:</span>
               <div className="grid grid-cols-3 gap-2 text-center">
-                {/* Hint Button */}
                 <button
                   id="hint-btn"
                   onClick={handleShowHint}
@@ -875,7 +1031,6 @@ export default function SnackCrushGame() {
                   <span className="text-[10px] font-black text-stone-700">ใบ้คู่</span>
                 </button>
 
-                {/* Shuffle Button */}
                 <button
                   id="shuffle-btn"
                   onClick={() => shuffleBoard()}
@@ -886,7 +1041,6 @@ export default function SnackCrushGame() {
                   <span className="text-[10px] font-black text-stone-700">สับใหม่</span>
                 </button>
 
-                {/* Bomb Booster */}
                 <button
                   id="bomb-btn"
                   onClick={() => setBombMode(!bombMode)}
@@ -913,12 +1067,42 @@ export default function SnackCrushGame() {
           </div>
 
           {/* Right: The Match-3 Grid Board */}
-          <div className="relative mx-auto flex flex-col items-center w-full max-w-[430px]">
-            {/* Glossy Candy Board Frame */}
+          <div className="relative mx-auto flex flex-col items-center w-full max-w-[420px]">
+            {/* Glossy Candy Soda Board Frame */}
             <div
-              className="relative w-full rounded-3xl border-4 border-[#BCE1FF] bg-gradient-to-b from-[#62B8FF]/40 via-[#99D5FF]/30 to-[#CCE9FF]/40 p-2 sm:p-3.5 shadow-2xl backdrop-blur-md"
-              style={{ touchAction: "none" }} // Prevents mobile touch drag from scrolling the screen
+              className="relative w-full rounded-3xl border-4 border-white bg-gradient-to-b from-[#60A5FA]/35 via-[#93C5FD]/25 to-[#BAE6FD]/35 p-2 sm:p-3 shadow-2xl shadow-sky-500/20"
+              style={{
+                touchAction: "none",
+                willChange: "transform",
+                transform: "translate3d(0, 0, 0)",
+              }}
             >
+              {/* Glossy top edge highlight */}
+              <div className="pointer-events-none absolute top-1 left-4 right-4 h-3 rounded-full bg-white/40" />
+
+              {/* Combo Banner Popup */}
+              <AnimatePresence>
+                {comboBanner && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5, y: -20 }}
+                    animate={{ opacity: 1, scale: 1.15, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                    transition={{ type: "spring", damping: 12, stiffness: 200 }}
+                    className="pointer-events-none absolute inset-x-0 top-1/3 z-40 flex flex-col items-center justify-center"
+                  >
+                    <div className="rounded-3xl bg-gradient-to-r from-[#FF007A] via-[#FF758F] to-[#FFB703] px-6 py-2.5 text-center text-white shadow-2xl border-4 border-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.3)]">
+                      <span className="font-display text-2xl sm:text-3xl font-black tracking-wider block drop-shadow-md">
+                        {comboBanner.text}
+                      </span>
+                      <span className="text-xs font-extrabold text-[#FFF3B0] block">
+                        {comboBanner.sub}
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* The 7x7 Grid with GPU Acceleration */}
               <div className="grid grid-cols-7 gap-1 sm:gap-1.5 select-none">
                 {grid.map((row, r) =>
                   row.map((tile, c) => {
@@ -933,8 +1117,8 @@ export default function SnackCrushGame() {
                       invalidPair &&
                       ((invalidPair[0].r === r && invalidPair[0].c === c) ||
                         (invalidPair[1].r === r && invalidPair[1].c === c));
+                    const isPopping = matchingCoords.has(`${r},${c}`);
 
-                    // Show arrow indicators around selected tile
                     const isAdjacentToSelected =
                       selectedPos &&
                       ((Math.abs(selectedPos.r - r) === 1 && selectedPos.c === c) ||
@@ -955,36 +1139,37 @@ export default function SnackCrushGame() {
                         onTouchStart={(e) => handleTouchStart(r, c, e)}
                         onTouchEnd={handleTouchEnd}
                       >
-                        <motion.button
+                        <button
                           id={`tile-${r}-${c}`}
                           data-row={r}
                           data-col={c}
                           data-type={tile.type}
-                          layout
-                          initial={{ scale: 0 }}
-                          animate={{
-                            scale: isSelected ? 1.15 : isHint ? [1, 1.12, 1] : 1,
-                            rotate: isSelected ? [0, -5, 5, 0] : isInvalid ? [0, -10, 10, -6, 6, 0] : 0,
-                          }}
-                          transition={{
-                            duration: isInvalid ? 0.35 : 0.2,
-                            repeat: isHint ? Infinity : 0,
-                            repeatDelay: 0.8,
-                          }}
                           onClick={() => handleTileClick(r, c)}
-                          className={`relative size-full flex items-center justify-center rounded-2xl sm:rounded-3xl shadow-md transition-all cursor-pointer ${
+                          style={{
+                            borderColor: isInvalid ? "#EF4444" : tile.borderCol,
+                            transform: isSelected
+                              ? "scale(1.15) translate3d(0, 0, 0)"
+                              : isPopping
+                              ? "scale(1.28) translate3d(0, 0, 0)"
+                              : isHint
+                              ? "scale(1.08) translate3d(0, 0, 0)"
+                              : "scale(1) translate3d(0, 0, 0)",
+                            willChange: "transform",
+                          }}
+                          className={`relative size-full flex items-center justify-center rounded-2xl sm:rounded-3xl shadow-md cursor-pointer transition-transform duration-150 ${
                             isSelected
-                              ? "ring-4 ring-[#FFD95A] ring-offset-2 z-20 shadow-xl scale-105"
+                              ? "ring-4 ring-[#FFD95A] ring-offset-2 z-20 shadow-xl"
                               : isHint
                               ? "ring-4 ring-[#FFD95A] ring-offset-1 z-10 animate-pulse shadow-lg"
                               : isAdjacentToSelected
-                              ? "ring-2 ring-white/90 ring-offset-1 z-10"
-                              : "hover:scale-105 active:scale-90"
+                              ? "ring-2 ring-white/95 ring-offset-1 z-10"
+                              : isPopping
+                              ? "brightness-125 z-30"
+                              : "hover:scale-105 active:scale-95"
                           } bg-gradient-to-br ${tile.bgGrad} border-b-4 border-r-2`}
-                          style={{ borderColor: isInvalid ? "#EF4444" : tile.borderCol }}
                         >
                           {/* Glossy highlight reflection */}
-                          <div className="pointer-events-none absolute top-1 left-1.5 h-2 w-4 sm:h-2.5 sm:w-5 rounded-full bg-white/40 blur-[0.5px]" />
+                          <div className="pointer-events-none absolute top-1 left-1.5 h-2 w-4 sm:h-2.5 sm:w-5 rounded-full bg-white/45" />
 
                           {/* Snack Emoji */}
                           <span className="text-xl sm:text-3xl drop-shadow-sm select-none pointer-events-none">
@@ -1009,21 +1194,47 @@ export default function SnackCrushGame() {
                               ✨
                             </span>
                           )}
-                        </motion.button>
+                        </button>
                       </div>
                     );
                   })
                 )}
               </div>
 
+              {/* Sparkle Particles Burst on Match */}
+              <div className="pointer-events-none absolute inset-0 overflow-hidden z-30">
+                {particles.map((p) => (
+                  <motion.div
+                    key={p.id}
+                    initial={{ opacity: 1, scale: 1, x: p.x, y: p.y }}
+                    animate={{ opacity: 0, scale: 0.2, x: p.x + p.vx, y: p.y + p.vy }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="absolute flex items-center justify-center"
+                    style={{
+                      width: p.size,
+                      height: p.size,
+                      borderRadius: "50%",
+                      backgroundColor: p.color,
+                      boxShadow: `0 0 10px ${p.color}`,
+                    }}
+                  >
+                    {p.emoji && (
+                      <span className="text-sm select-none pointer-events-none">
+                        {p.emoji}
+                      </span>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+
               {/* Floating score badges */}
-              <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="pointer-events-none absolute inset-0 overflow-hidden z-35">
                 {floatingPoints.map((pt) => (
                   <motion.div
                     key={pt.id}
                     initial={{ opacity: 1, y: pt.y, x: pt.x, scale: 0.8 }}
                     animate={{ opacity: 0, y: pt.y - 45, scale: 1.25 }}
-                    transition={{ duration: 0.85 }}
+                    transition={{ duration: 0.8 }}
                     className="absolute font-display text-sm sm:text-base font-black text-[#FFD95A] drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]"
                   >
                     {pt.text}
@@ -1033,12 +1244,12 @@ export default function SnackCrushGame() {
             </div>
 
             {/* How to play easy guide */}
-            <div className="mt-3.5 w-full rounded-2xl bg-white/90 p-3 text-center border border-white/80 shadow-xs backdrop-blur-xs">
+            <div className="mt-3 w-full rounded-2xl bg-white/95 p-2.5 text-center border border-white/80 shadow-xs">
               <p className="text-xs font-bold text-stone-700">
-                👆 <b>วิธีเล่นง่ายๆ:</b> ใช้นิ้วปัด (Swipe) หรือ แตะขนม 2 ชิ้นที่ติดกัน เพื่อสลับให้เรียงครบ 3 ชิ้น!
+                👆 <b>วิธีเล่นง่ายๆ:</b> ใช้นิ้วปัด (Swipe) หรือแตะ 2 ชิ้นที่ติดกัน เพื่อเรียงขนมให้ครบ 3 ชิ้น!
               </p>
               <p className="text-[11px] font-medium text-stone-500 mt-0.5">
-                ถ้าคิดไม่ออก กดปุ่ม <b>💡 ใบ้คู่</b> หรือ <b>🔀 สับใหม่</b> ด้านซ้ายได้ตลอดเลยค่ะ
+                ถ้าคิดไม่ออก กดปุ่ม <b>💡 ใบ้คู่</b> หรือ <b>🔀 สับใหม่</b> ได้ตลอดเลยน้า
               </p>
             </div>
           </div>
@@ -1047,15 +1258,14 @@ export default function SnackCrushGame() {
         {/* Victory Modal with 30% Discount Coupon! */}
         <AnimatePresence>
           {gameState === "won" && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
               <motion.div
                 initial={{ opacity: 0, scale: 0.8, y: 30 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 className="relative w-full max-w-md overflow-hidden rounded-[36px] border-4 border-[#FFD95A] bg-white p-6 sm:p-7 text-center shadow-2xl"
               >
-                {/* Decorative floating glow */}
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 size-40 rounded-full bg-[#FF718D]/20 blur-2xl pointer-events-none" />
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 size-40 rounded-full bg-[#FF718D]/20 blur-xl pointer-events-none" />
 
                 <div className="flex justify-center -space-x-1">
                   <Star size={34} className="text-[#FFB703] fill-[#FFB703] animate-bounce" />
@@ -1133,7 +1343,7 @@ export default function SnackCrushGame() {
         {/* Game Over Modal */}
         <AnimatePresence>
           {gameState === "lost" && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
