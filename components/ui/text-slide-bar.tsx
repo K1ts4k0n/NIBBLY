@@ -21,28 +21,33 @@ export function AnnouncementMarquee() {
 
   const announcements = [
     {
-      emoji: "🎉",
+      emoji: "🎀",
+      text: lang === "th" ? "โปรโมชั่นพิเศษ! ดีลเด็ด Flash Sale ลดสูงสุด 20% ช้อปเลย" : "Special Deals! Flash Sale & Bundles up to 20% off",
+      link: "/promotions",
+    },
+    {
+      emoji: "💖",
       text: lang === "th" ? "สมัครสมาชิกใหม่ รับส่วนลด 15% ทันที (โค้ด NIBBLYWELCOME15)" : "Sign up & get 15% off with code NIBBLYWELCOME15",
       link: "/register",
     },
     {
       emoji: "🚚",
-      text: lang === "th" ? "ส่งฟรีทั่วประเทศ เมื่อช้อปครบ ฿500" : "Free Nationwide Delivery on orders over ฿500",
+      text: lang === "th" ? "ส่งฟรีทั่วประเทศ เมื่อช้อปครบ ฿499" : "Free Nationwide Delivery on orders over ฿499",
       link: "/shop",
     },
     {
-      emoji: "🎂",
+      emoji: "🧸",
       text: lang === "th" ? "ของขวัญวันเกิด: รับฟรีขนม NIBBLY 1 ซองเต็มในเดือนเกิด" : "Birthday Perk: Free snack pouch on your birthday month",
       link: "/register",
     },
     {
-      emoji: "🥗",
-      text: lang === "th" ? "ไม่แน่ใจว่ากินอะไรดี? ลองใช้ระบบแนะนำขนมสุขภาพ Snack Matcher" : "Find your ideal health snacks with our 1-min Snack Matcher",
+      emoji: "✨",
+      text: lang === "th" ? "ไม่แน่ใจว่ากินอะไรดี? ลองค้นหาขนมสุขภาพ Snack Finder ภายใน 1 นาที" : "Find your ideal health snacks with our 1-min Snack Finder",
       link: "/recommend",
     },
     {
-      emoji: "✨",
-      text: lang === "th" ? "วัตถุดิบธรรมชาติ 100% ไม่ใส่น้ำตาลทรายขาว ไม่ทอด" : "100% Wholesome ingredients, zero refined sugar, baked not fried",
+      emoji: "🍓",
+      text: lang === "th" ? "วัตถุดิบธรรมชาติ 100% ไม่ใช้น้ำตาลทรายขาว อบสดใหม่ทุกวัน" : "100% Wholesome ingredients, zero refined sugar, baked fresh daily",
       link: "/shop",
     },
   ];

@@ -31,71 +31,92 @@ export function Navbar() {
   }, []);
 
   const nav = [
-    { label: t("home"), href: "/" },
-    { label: t("shop"), href: "/shop" },
+    { label: lang === "th" ? "หน้าแรก" : "Home", emoji: "🥣", href: "/" },
+    { label: lang === "th" ? "ร้านขนม" : "Shop", emoji: "🍓", href: "/shop" },
     {
-      label: lang === "th" ? "โปรโมชั่น 🔥" : "Deals 🔥",
+      label: lang === "th" ? "โปรโมชั่น" : "Deals",
+      emoji: "🎀",
       href: "/promotions",
+      badge: "HOT 🔥",
+      special: true,
     },
     {
       label: lang === "th" ? "แนะนำขนมสุขภาพ" : "Snack Finder",
+      emoji: "✨",
       href: "/recommend",
       highlight: true,
     },
     {
-      label: isLoggedIn
-        ? (lang === "th" ? "ข้อมูลของฉัน" : "My Profile")
-        : (lang === "th" ? "สมัครสมาชิก" : "Sign Up"),
-      href: "/register",
-    },
-    {
-      label: lang === "th" ? "รับข่าวสาร 💌" : "Newsletter 💌",
+      label: lang === "th" ? "รับข่าวสาร" : "Newsletter",
+      emoji: "💌",
       href: "/subscribe",
     },
     {
-      label: lang === "th" ? "ระบบ Admin ⚙️" : "Admin ⚙️",
-      href: "/admin",
+      label: lang === "th" ? "เรื่องของเรา" : "Our Story",
+      emoji: "🥑",
+      href: "/#about",
     },
-    { label: t("story"), href: "/#about" },
-    { label: t("why"), href: "/#why" },
+    {
+      label: lang === "th" ? "ทำไมต้อง NIBBLY" : "Why Us",
+      emoji: "🌿",
+      href: "/#why",
+    },
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#d8c79e]/80 bg-[#f8efd9]/90 shadow-xs backdrop-blur-xl">
-      <div className="mx-auto flex h-[82px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" aria-label="NIBBLY home" className="relative block h-[68px] w-[138px] shrink-0 overflow-hidden">
+    <header className="sticky top-0 z-40 border-b border-[#E8DCB8] bg-[#FFF9ED]/95 shadow-xs backdrop-blur-xl">
+      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-3 sm:px-5 lg:px-6">
+        <Link href="/" aria-label="NIBBLY home" className="relative block h-[60px] w-[124px] shrink-0 overflow-hidden transition hover:scale-105">
           <Image
             src={`${publicPath}/nibbly-logo-crop.png`}
             alt="NIBBLY Healthy Treats"
             fill
-            sizes="138px"
+            sizes="124px"
             className="object-contain"
             priority
           />
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden items-center gap-6 lg:flex">
+        {/* Desktop Nav - Beautiful & Cute Horizontal Layout */}
+        <nav className="hidden items-center gap-1 xl:gap-2 lg:flex">
           {nav.map((item) => {
             if (item.highlight) {
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="group relative inline-flex items-center gap-1.5 rounded-full bg-[#354B2D] px-3.5 py-1.5 text-xs font-extrabold text-white shadow-xs transition hover:scale-105 hover:bg-[#FF718D]"
+                  className="group relative inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-[#354B2D] via-[#436139] to-[#354B2D] px-3.5 py-1.5 text-xs font-black text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md hover:from-[#FF718D] hover:to-[#A678FF]"
                 >
-                  <Sparkles size={13} className="text-[#FFD95A] transition group-hover:rotate-12" />
+                  <span className="text-sm transition-transform duration-200 group-hover:rotate-12 group-hover:scale-125">{item.emoji}</span>
                   <span>{item.label}</span>
                 </Link>
               );
             }
+
+            if (item.special) {
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="group relative inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#FFCCD8] bg-[#FFF0F4] px-3 py-1.5 text-xs font-bold text-[#D81159] shadow-2xs transition-all duration-200 hover:scale-105 hover:bg-[#FF718D] hover:text-white"
+                >
+                  <span className="text-sm transition-transform duration-200 group-hover:scale-125">{item.emoji}</span>
+                  <span>{item.label}</span>
+                  <span className="rounded-full bg-[#FF5722] px-1.5 py-0.5 text-[9px] font-black text-white shadow-xs">
+                    {item.badge}
+                  </span>
+                </Link>
+              );
+            }
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-sm font-medium text-[#354B2D]/85 transition hover:text-[#c77725]"
+                className="group inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1.5 text-xs font-bold text-[#354B2D]/90 transition-all duration-200 hover:bg-white/80 hover:text-[#B24823] hover:shadow-2xs active:scale-95"
               >
-                {item.label}
+                <span className="text-sm transition-transform duration-200 group-hover:scale-125">{item.emoji}</span>
+                <span>{item.label}</span>
               </Link>
             );
           })}
@@ -175,9 +196,9 @@ export function Navbar() {
               <Link
                 href="/register"
                 aria-label="Member Account"
-                className="flex items-center gap-1.5 rounded-full border border-[#d8c79e]/70 bg-white/70 px-3 py-1.5 text-xs font-bold text-[#354B2D] transition hover:bg-white hover:text-[#c77725]"
+                className="group flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#FFCCD8] bg-[#FFF0F4]/90 px-3.5 py-1.5 text-xs font-black text-[#D81159] shadow-2xs transition-all duration-200 hover:scale-105 hover:bg-[#FF718D] hover:text-white"
               >
-                <UserRound size={16} />
+                <span className="text-sm transition-transform duration-200 group-hover:scale-125">🧸</span>
                 <span>{lang === "th" ? "สมัครสมาชิก" : "Sign Up"}</span>
               </Link>
             )}
@@ -246,14 +267,25 @@ export function Navbar() {
                   onClick={() => setMobile(false)}
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between rounded-xl p-3 text-sm font-bold ${
+                  className={`flex items-center justify-between rounded-2xl p-3 text-sm font-bold transition ${
                     item.highlight
-                      ? "bg-[#354B2D] text-white"
-                      : "text-[#354B2D] hover:bg-[#eeddbb]"
+                      ? "bg-gradient-to-r from-[#354B2D] to-[#436139] text-white shadow-sm"
+                      : item.special
+                      ? "bg-[#FFF0F4] border border-[#FFCCD8] text-[#D81159]"
+                      : "text-[#354B2D] hover:bg-[#F3E7D3]"
                   }`}
                 >
-                  <span>{item.label}</span>
-                  {item.highlight && <Sparkles size={15} className="text-[#FFD95A]" />}
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-lg">{item.emoji}</span>
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge ? (
+                    <span className="rounded-full bg-[#FF5722] px-2 py-0.5 text-[10px] font-black text-white">
+                      {item.badge}
+                    </span>
+                  ) : item.highlight ? (
+                    <Sparkles size={16} className="text-[#FFD95A]" />
+                  ) : null}
                 </Link>
               ))}
 
