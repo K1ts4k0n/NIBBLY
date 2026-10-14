@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Artkung Rakyouna",
+    "email": "atetfitqlpseo123@gmail.com",
+    "phone": "089-987-6543",
+    "berryPoints": 100,
+    "welcomeCoupon": "NIBBLYWELCOME15",
+    "healthGoals": ["weight-control", "fitness-protein"],
+    "registeredAt": "2026-10-08T08:30:00.000Z"
+  },
+  {
+    "name": "นภัสวรรณ สมสุข",
+    "email": "napassawan.s@gmail.com",
+    "phone": "081-456-7890",
+    "berryPoints": 125,
+    "welcomeCoupon": "NIBBLYWELCOME15",
+    "healthGoals": ["gut-health", "skin-glow"],
+    "registeredAt": "2026-10-07T14:10:00.000Z"
+  },
+  {
+    "name": "ธนภัทร เจริญชัย",
+    "email": "thanapat.fit@hotmail.com",
+    "phone": "092-333-8899",
+    "berryPoints": 117,
+    "welcomeCoupon": "NIBBLYWELCOME15",
+    "healthGoals": ["fitness-protein"],
+    "registeredAt": "2026-10-06T11:45:00.000Z"
+  }
+]

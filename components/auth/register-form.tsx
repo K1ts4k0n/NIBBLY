@@ -131,6 +131,26 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
         allergens: selectedAllergens,
         birthday,
       });
+
+      // ส่งอีเมลต้อนรับสมาชิกใหม่ผ่าน API / PHP Backend
+      try {
+        await fetch("/api/send-email/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "register",
+            name,
+            email,
+            taste: selectedGoals.includes("weight-control") ? "ขม/เข้มข้น" : "เปรี้ยวอมหวาน",
+            scent: "ช็อกโกแลต",
+            roast: "คั่วเข้ม/อบกรอบ",
+            brand: "caffellina", // ตรงกับตัวอย่างครู
+          }),
+        });
+      } catch {
+        // ดำเนินการต่อแม้ API มีปัญหา เพื่อไม่ให้กระทบ UX ของการสมัครสมาชิก
+      }
+
       onSuccess(user);
     } catch {
       setError(lang === "th" ? "เกิดข้อผิดพลาดในการสมัคร กรุณาลองใหม่อีกครั้ง" : "Registration failed. Please try again.");

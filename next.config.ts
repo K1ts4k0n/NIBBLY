@@ -2,8 +2,10 @@ import type { NextConfig } from "next";
 
 const basePath = process.env.GITHUB_PAGES === "true" ? "/NIBBLY" : "";
 
+const isGithubPages = process.env.GITHUB_PAGES === "true";
+
 const nextConfig: NextConfig = {
-  output: "export",
+  ...(isGithubPages ? { output: "export" } : {}),
   trailingSlash: true,
   // `configure-pages` exposes GITHUB_PAGES during the deployment build.
   // Keeping the base path there ensures static assets resolve under /NIBBLY/.

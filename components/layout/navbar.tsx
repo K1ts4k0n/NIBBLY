@@ -34,6 +34,10 @@ export function Navbar() {
     { label: t("home"), href: "/" },
     { label: t("shop"), href: "/shop" },
     {
+      label: lang === "th" ? "โปรโมชั่น 🔥" : "Deals 🔥",
+      href: "/promotions",
+    },
+    {
       label: lang === "th" ? "แนะนำขนมสุขภาพ" : "Snack Finder",
       href: "/recommend",
       highlight: true,
@@ -43,6 +47,14 @@ export function Navbar() {
         ? (lang === "th" ? "ข้อมูลของฉัน" : "My Profile")
         : (lang === "th" ? "สมัครสมาชิก" : "Sign Up"),
       href: "/register",
+    },
+    {
+      label: lang === "th" ? "รับข่าวสาร 💌" : "Newsletter 💌",
+      href: "/subscribe",
+    },
+    {
+      label: lang === "th" ? "ระบบ Admin ⚙️" : "Admin ⚙️",
+      href: "/admin",
     },
     { label: t("story"), href: "/#about" },
     { label: t("why"), href: "/#why" },

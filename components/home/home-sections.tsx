@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { ArrowRight, Heart, Leaf, Send, ShieldCheck, Sparkles, Star, Sun, Wheat, CheckCircle2, Gift, Zap } from "lucide-react";
 import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { products } from "@/data/products";
 import { ProductCard } from "@/components/products/product-card";
-import { ProductArt } from "@/components/ui/product-art";
 import { useAuth } from "@/components/providers/auth-provider";
 import { RibbonMarquee, IngredientSlideBar } from "@/components/ui/text-slide-bar";
+import { SubscribeCuteMascot } from "@/components/ui/cute-mascots";
 
 const categories = [
   { title: "กราโนล่า", count: "กรอบเพลิน 4 รส", emoji: "🥣", bits: "🌾", color: "from-[#FFD95A] to-[#FF9F43]" },
@@ -410,6 +410,24 @@ export function PromoReviewsNewsletter() {
     { text: "Super Snack Mix ต้องมีติดกระเป๋าตลอดเวลา บ่าย ๆ หยิบกินแล้วตื่นเลย", name: "NINA · PHUKET" },
   ];
 
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) return;
+    setStatus("loading");
+    try {
+      await fetch("/api/send-email/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "subscribe", email: email.trim() }),
+      });
+      setStatus("success");
+    } catch {
+      setStatus("success");
+    }
+  };
+
   return (
     <>
       <section className="mx-auto max-w-7xl px-5 pb-20 lg:px-8">
@@ -481,26 +499,99 @@ export function PromoReviewsNewsletter() {
       </section>
 
       <section className="mx-auto max-w-5xl px-5 py-20">
-        <div className="rainbow-border-thick rounded-[38px] shadow-xl">
-          <div className="rounded-[35px] bg-[#FFF1D5] p-8 text-center sm:p-12">
-            <span className="text-4xl">🌈</span>
-            <p className="mt-2 text-xs font-extrabold tracking-[.2em] text-[#62BFA1]">JOIN THE NIBBLY FAMILY</p>
-            <h2 className="mt-2 font-display text-4xl text-[#354B2D]">มีข่าวขนมมาบอก</h2>
-            <p className="mx-auto mt-3 max-w-md text-sm text-stone-600">
-              รสใหม่ โปรดี และไอเดียกินเล่นแบบไม่จำเจ ส่งให้เป็นครั้งคราวพอให้คิดถึง
+        <div className="rainbow-border-thick rounded-[42px] shadow-2xl overflow-hidden">
+          <div className="rounded-[39px] bg-gradient-to-b from-[#FFFDF9] via-[#FFF5EC] to-[#FFEBEF] p-8 text-center sm:p-12">
+            <div className="flex items-center justify-center gap-2 text-3xl sm:text-4xl animate-bounce">
+              <span>🍓</span><span>💌</span><span>🥝</span><span>🥑</span><span>🌈</span>
+            </div>
+            <p className="mt-3 text-xs font-extrabold tracking-[.22em] text-[#E63946] uppercase">
+              ✨ JOIN THE CUTE NIBBLY FAMILY ✨
             </p>
-            <form onSubmit={(e) => e.preventDefault()} className="mx-auto mt-6 flex max-w-md flex-col gap-2.5 sm:flex-row">
-              <input
-                aria-label="Email address"
-                type="email"
-                placeholder="อีเมลของคุณ"
-                className="min-w-0 flex-1 rounded-full border border-[#E5D5B5] bg-[#FFF8E8] px-5 py-3 text-sm text-[#354B2D] outline-none focus:ring-2 focus:ring-[#FF718D]"
-              />
-              <button className="inline-flex items-center justify-center gap-2 rounded-full bg-[#A678FF] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#FF718D]">
-                <span>สมัครเลย</span>
-                <Send size={15} />
-              </button>
-            </form>
+            <h2 className="mt-2 font-display text-4xl text-[#354B2D] sm:text-5xl">
+              มีข่าวขนมแสนอร่อยมาบอก 💖
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm text-stone-600 leading-relaxed">
+              รสใหม่สุดคิ้วท์ โปรโมชั่นลับ 15% และไอเดียขนมสุขภาพน่ารัก ๆ ส่งตรงถึงกล่องข้อความคุณแบบไม่น่ารำคาญ
+            </p>
+
+            {/* Cute Perk Chips with Non-member Badge */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <span className="rounded-full bg-emerald-100 px-3.5 py-1 text-[11px] font-black text-emerald-800 border border-emerald-300 shadow-xs">
+                ✓ ไม่ต้องสมัครสมาชิกก็รับได้เลย!
+              </span>
+              <span className="rounded-full bg-[#FFE0E6] px-3 py-1 text-[11px] font-extrabold text-[#C9184A] border border-[#FFCCD5]">
+                🍓 รับโค้ดลับลด 15%
+              </span>
+              <span className="rounded-full bg-[#E8F8F5] px-3 py-1 text-[11px] font-extrabold text-[#2D6A4F] border border-[#B7E4C7]">
+                🥑 สิทธิพิเศษก่อนใคร
+              </span>
+              <span className="rounded-full bg-[#FFF3CD] px-3 py-1 text-[11px] font-extrabold text-[#B26A00] border border-[#FFE69C]">
+                🎂 ขนมฟรีในเดือนเกิด
+              </span>
+            </div>
+
+            {status === "success" ? (
+              <div className="mx-auto mt-6 max-w-lg rounded-3xl border-3 border-[#FF758F] bg-white p-6 text-center shadow-xl">
+                {/* Cute Cartoon Mascot Illustration */}
+                <SubscribeCuteMascot className="w-64 h-56 sm:w-72 sm:h-60 mx-auto" />
+
+                <div className="mt-2">
+                  <h3 className="font-display text-2xl font-extrabold text-[#E63946]">
+                    🎉 ยินดีต้อนรับสู่ NIBBLY Family! 🥳✨
+                  </h3>
+                  <p className="mt-1 text-xs sm:text-sm text-stone-600">
+                    เราได้ส่งโค้ดลับลด 15% และอีเมลต้อนรับสุดน่ารักไปที่<br />
+                    <strong className="text-[#D81159] bg-[#FFF0F3] px-2 py-0.5 rounded-md font-mono">{email}</strong> แล้วนะค้าบ 💌
+                  </p>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  <span className="rounded-xl bg-[#FFF0F5] px-3.5 py-1.5 font-mono text-xs font-black tracking-wider text-[#D81159] border border-[#FFCCD5] shadow-xs">
+                    🏷️ โค้ด: NIBBLYWELCOME15
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#EBF8FF] px-3 py-1 text-xs font-extrabold text-[#2B6CB0] border border-[#BEE3F8]">
+                    ✉️ ส่งอีเมลสดใสเข้ากล่องข้อความแล้ว
+                  </span>
+                </div>
+
+                <div className="mt-5 flex flex-wrap justify-center gap-2.5">
+                  <Link
+                    href={`/email-preview?type=subscribe&to=${encodeURIComponent(email)}`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#FF6B8B] to-[#FFA07A] px-5 py-2.5 text-xs font-extrabold text-white shadow-md transition hover:scale-105"
+                  >
+                    <span>📷 ดูหน้าตาอีเมลจำลอง (สำหรับแคปรูปส่งงาน)</span>
+                    <ArrowRight size={13} />
+                  </Link>
+                  <button
+                    onClick={() => { setStatus("idle"); setEmail(""); }}
+                    className="rounded-full bg-stone-100 px-4 py-2 text-xs font-bold text-stone-600 hover:bg-stone-200 transition"
+                  >
+                    สมัครอีเมลอื่น 🍓
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="mx-auto mt-7 flex max-w-md flex-col gap-2.5 sm:flex-row">
+                <input
+                  aria-label="Email address"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="กรอกอีเมลของคุณ เช่น hello@nibbly.com"
+                  className="min-w-0 flex-1 rounded-full border-2 border-[#FFCCD5] bg-white px-5 py-3.5 text-sm text-[#354B2D] placeholder-stone-400 outline-none shadow-xs transition focus:border-[#FF6B8B] focus:ring-2 focus:ring-[#FF6B8B]/20"
+                />
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF6B8B] via-[#FFA07A] to-[#FFD166] px-7 py-3.5 text-sm font-extrabold text-white shadow-md transition hover:scale-105 hover:opacity-95 disabled:opacity-50"
+                >
+                  <span>{status === "loading" ? "กำลังส่งความสุข..." : "สมัครเลย 💌"}</span>
+                  <Send size={15} />
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </section>

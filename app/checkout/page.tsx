@@ -20,6 +20,7 @@ import {
   QrCode,
   ShieldCheck,
   ShoppingBag,
+  Smartphone,
   Sparkles,
   Tag,
   Trash2,
@@ -35,6 +36,7 @@ import { useCart } from "@/components/providers/cart-provider";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useLanguage } from "@/components/providers/language-provider";
 import { ProductArt } from "@/components/ui/product-art";
+import { OrderCuteMascot } from "@/components/ui/cute-mascots";
 
 interface PromoCodeDef {
   code: string;
@@ -239,11 +241,11 @@ export default function CheckoutPage() {
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !phone.trim() || !address.trim()) {
+    if (!name.trim() || !phone.trim() || !email.trim() || !address.trim()) {
       alert(
         lang === "th"
-          ? "กรุณากรอกข้อมูลชื่อ เบอร์โทรศัพท์ และที่อยู่จัดส่งให้ครบถ้วน"
-          : "Please fill in your name, phone number, and delivery address"
+          ? "กรุณากรอกข้อมูลชื่อ เบอร์โทรศัพท์ อีเมลสำหรับรับใบเสร็จ และที่อยู่จัดส่งให้ครบถ้วน"
+          : "Please fill in your name, phone number, email address, and delivery address"
       );
       return;
     }
@@ -284,6 +286,49 @@ export default function CheckoutPage() {
       setOrderCompleted(true);
       clear(); // Clear the cart
       window.scrollTo({ top: 0, behavior: "smooth" });
+
+      // Automatically trigger order confirmation email to customer
+      try {
+        const paymentLabel =
+          paymentMethod === "promptpay"
+            ? "พร้อมเพย์ (PromptPay QR)"
+            : paymentMethod === "card"
+            ? "บัตรเครดิต/เดบิต"
+            : paymentMethod === "truemoney"
+            ? "TrueMoney Wallet"
+            : "เก็บเงินปลายทาง (COD)";
+
+        fetch("/api/send-email/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "order",
+            email: email.trim(),
+            name: name.trim(),
+            orderId,
+            phone: phone.trim(),
+            address: `${address.trim()}, ${province} ${postalCode}`,
+            paymentMethod: paymentLabel,
+            promoCode: appliedPromo?.code,
+            subtotal,
+            discount: discountAmount,
+            shipping: shippingFee,
+            grandTotal,
+            items: orderData.items.map((i) => ({
+              name: i.name,
+              price: i.price,
+              quantity: i.quantity,
+              art: i.art,
+              slug: i.slug,
+              emoji: "🍓",
+            })),
+          }),
+        }).catch((err) => {
+          console.error("Order confirmation email failed:", err);
+        });
+      } catch (err) {
+        console.error("Order email error:", err);
+      }
     }, 1000);
   };
 
@@ -297,24 +342,27 @@ export default function CheckoutPage() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="overflow-hidden rounded-[38px] border-2 border-emerald-400/80 bg-[#FFFDF8] p-6 shadow-2xl sm:p-10"
           >
-            {/* Top Success Celebration Badge */}
+            {/* Top Success Celebration Badge with Cute Mascot */}
             <div className="text-center">
-              <div className="mx-auto grid size-20 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
-                <Check size={40} strokeWidth={3} />
+              <div className="flex items-center justify-center gap-2 text-2xl sm:text-3xl animate-bounce">
+                <span>🍓</span><span>📦</span><span>🥝</span><span>🥑</span><span>🍯</span><span>✨</span>
               </div>
 
-              <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-4 py-1 text-xs font-bold text-emerald-800">
-                <Sparkles size={14} />
-                <span>{lang === "th" ? "ชำระเงินและสั่งซื้อสำเร็จ!" : "Payment & Order Successful!"}</span>
+              {/* Cute Cartoon Mascot Illustration */}
+              <OrderCuteMascot className="w-72 h-64 sm:w-80 sm:h-72 mx-auto my-2" />
+
+              <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FFD166]/40 via-[#FF70A6]/30 to-[#52B788]/30 px-4 py-1.5 text-xs font-extrabold text-[#354B2D] border border-[#FFCCD5]">
+                <Sparkles size={14} className="text-[#FF70A6]" />
+                <span>{lang === "th" ? "🎉 ชำระเงินและสั่งซื้อสำเร็จเรียบร้อย! ✨" : "Payment & Order Successful! ✨"}</span>
               </div>
 
               <h1 className="mt-3 font-display text-3xl font-extrabold text-[#354B2D] sm:text-4xl">
-                {lang === "th" ? "ขอบคุณสำหรับคำสั่งซื้อแสนอร่อย!" : "Thank You For Your Order!"}
+                {lang === "th" ? "ขอบคุณสำหรับการสั่งซื้อแสนอร่อย! 📦💖" : "Thank You For Your Order! 💖"}
               </h1>
 
-              <p className="mx-auto mt-2 max-w-md text-sm text-stone-600">
+              <p className="mx-auto mt-2 max-w-md text-sm text-stone-600 leading-relaxed">
                 {lang === "th"
-                  ? "เราได้รับคำสั่งซื้อของคุณเรียบร้อยแล้ว กำลังจัดเตรียมกล่องขนมสดใหม่ส่งตรงถึงบ้านคุณ"
+                  ? "น้อง NIBBLY ได้รับคำสั่งซื้อของคุณแล้ว กำลังจัดเตรียมกล่องขนมสุขภาพอบสดใหม่ส่งตรงถึงบ้านคุณ 🚚💨"
                   : "We have received your order and are packing your wholesome healthy snacks with love."}
               </p>
             </div>
@@ -408,6 +456,35 @@ export default function CheckoutPage() {
               <div className="mt-3 flex items-center gap-1.5 text-emerald-700 font-bold">
                 <Package size={14} />
                 <span>{lang === "th" ? "คาดว่าจะได้รับสินค้าภายใน 1-2 วันทำการ" : "Estimated delivery in 1-2 business days"}</span>
+              </div>
+            </div>
+
+            {/* Email Confirmation Notification Card (Requirement 3 & 4) */}
+            <div className="mt-6 rounded-2xl border-2 border-dashed border-[#FF718D] bg-gradient-to-r from-[#FFF0F5] to-[#FFF9EA] p-4 text-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-start gap-2.5">
+                  <span className="text-2xl">✉️</span>
+                  <div>
+                    <p className="font-bold text-[#354B2D]">
+                      {lang === "th"
+                        ? `ส่งใบเสร็จสรุปคำสั่งซื้อไปยังอีเมลเรียบร้อยแล้ว!`
+                        : `Order receipt sent to your email!`}
+                    </p>
+                    <p className="text-[11px] text-stone-600 mt-0.5">
+                      {lang === "th"
+                        ? `ระบบได้ส่งอีเมลสรุปข้อมูลคำสั่งซื้อ #${completedOrderData.orderId} ไปยัง ${completedOrderData.customer.email || "อีเมลของคุณ"}`
+                        : `Confirmation email with full order details was dispatched to ${completedOrderData.customer.email || "your email"}`}
+                    </p>
+                  </div>
+                </div>
+
+                <Link
+                  href={`/email-preview/?type=order&orderId=${completedOrderData.orderId}&email=${encodeURIComponent(completedOrderData.customer.email || "")}&name=${encodeURIComponent(completedOrderData.customer.name || "")}`}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#FF718D] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-[#c65752] shrink-0"
+                >
+                  <Smartphone size={14} />
+                  <span>{lang === "th" ? "ดูตัวอย่างอีเมล (สำหรับแคปรูป)" : "Preview Email"}</span>
+                </Link>
               </div>
             </div>
 
@@ -582,10 +659,11 @@ export default function CheckoutPage() {
 
                 <div>
                   <label className="text-xs font-semibold text-stone-600">
-                    {lang === "th" ? "อีเมล (สำหรับรับใบเสร็จและสถานะพัสดุ)" : "Email Address"}
+                    {lang === "th" ? "อีเมลสำหรับรับใบเสร็จสรุปคำสั่งซื้อ *" : "Email Address (For order receipt) *"}
                   </label>
                   <input
                     type="email"
+                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"

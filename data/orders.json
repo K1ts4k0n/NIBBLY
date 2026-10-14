@@ -1,0 +1,133 @@
+[
+  {
+    "orderId": "NIB-2026-991204",
+    "customerName": "Artkung Rakyouna",
+    "email": "atetfitqlpseo123@gmail.com",
+    "phone": "089-987-6543",
+    "address": "128/9 ซอยสุขุมวิท 23 แขวงคลองเตยเหนือ เขตวัฒนา กรุงเทพฯ 10110",
+    "paymentMethod": "พร้อมเพย์ (PromptPay QR)",
+    "promoCode": "NIBBLYWELCOME15",
+    "subtotal": 840,
+    "discount": 126,
+    "shipping": 0,
+    "grandTotal": 714,
+    "status": "PAID",
+    "createdAt": "2026-10-08T05:10:48.392Z",
+    "items": [
+      {
+        "name": "NIBBLY Berry Granola",
+        "price": 149,
+        "quantity": 2,
+        "art": "berry-granola",
+        "slug": "nibbly-berry-granola"
+      },
+      {
+        "name": "Dark Cocoa Nut Mix",
+        "price": 155,
+        "quantity": 1,
+        "art": "dark-cocoa",
+        "slug": "dark-cocoa-nut-mix"
+      },
+      {
+        "name": "Strawberry Yogurt Bites",
+        "price": 129,
+        "quantity": 3,
+        "art": "strawberry-yogurt",
+        "slug": "strawberry-yogurt-bites"
+      }
+    ]
+  },
+  {
+    "orderId": "NIB-2026-889922",
+    "customerName": "Artkung Rakyouna",
+    "email": "atetfitqlpseo123@gmail.com",
+    "phone": "089-987-6543",
+    "address": "128/9 ซอยสุขุมวิท 23 แขวงคลองเตยเหนือ เขตวัฒนา กรุงเทพฯ 10110",
+    "paymentMethod": "พร้อมเพย์ (PromptPay QR)",
+    "promoCode": "NIBBLYWELCOME15",
+    "subtotal": 437,
+    "discount": 66,
+    "shipping": 0,
+    "grandTotal": 371,
+    "status": "SHIPPED",
+    "createdAt": "2026-10-08T10:45:00.000Z",
+    "items": [
+      {
+        "name": "NIBBLY Berry Granola",
+        "price": 149,
+        "quantity": 2,
+        "emoji": "🍓"
+      },
+      {
+        "name": "Choco Oat Crunch",
+        "price": 139,
+        "quantity": 1,
+        "emoji": "🍫"
+      }
+    ]
+  },
+  {
+    "orderId": "NIB-2026-773120",
+    "customerName": "นภัสวรรณ สมสุข",
+    "email": "napassawan.s@gmail.com",
+    "phone": "081-456-7890",
+    "address": "45/2 ถนนสุขุมวิท 55 แขวงคลองตันเหนือ เขตวัฒนา กทม. 10110",
+    "paymentMethod": "บัตรเครดิต/เดบิต",
+    "promoCode": "FREESHIP",
+    "subtotal": 510,
+    "discount": 40,
+    "shipping": 0,
+    "grandTotal": 470,
+    "status": "SHIPPED",
+    "createdAt": "2026-10-08T09:15:00.000Z",
+    "items": [
+      {
+        "name": "Peanut Butter Protein Bites",
+        "price": 159,
+        "quantity": 2,
+        "emoji": "⚡"
+      },
+      {
+        "name": "Honey Almond Crunch",
+        "price": 139,
+        "quantity": 1,
+        "emoji": "🍯"
+      },
+      {
+        "name": "Berry Oat Cookies",
+        "price": 125,
+        "quantity": 1,
+        "emoji": "🍪"
+      }
+    ]
+  },
+  {
+    "orderId": "NIB-2026-662901",
+    "customerName": "ธนภัทร เจริญชัย",
+    "email": "thanapat.fit@hotmail.com",
+    "phone": "092-333-8899",
+    "address": "88/11 หมู่บ้านเสรีภาพ ถ.พหลโยธิน จตุจักร กทม. 10900",
+    "paymentMethod": "โอนผ่านบัญชีธนาคาร (KBANK)",
+    "promoCode": "NIBBLY50",
+    "subtotal": 358,
+    "discount": 50,
+    "shipping": 40,
+    "grandTotal": 348,
+    "status": "DELIVERED",
+    "createdAt": "2026-10-07T15:20:00.000Z",
+    "items": [
+      {
+        "name": "NIBBLY Super Snack Mix",
+        "price": 169,
+        "quantity": 1,
+        "emoji": "🌟"
+      },
+      {
+        "name": "Green Matcha Oat Bites",
+        "price": 139,
+        "quantity": 1,
+        "emoji": "🍵"
+      }
+    ]
+  }
+]

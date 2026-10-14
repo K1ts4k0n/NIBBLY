@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Facebook, Instagram, Music2, Sparkles } from "lucide-react";
 import { publicPath } from "@/lib/public-path";
+import { NewsletterSubscribeBox } from "@/components/newsletter/subscribe-box";
 
 export function Footer() {
   return (
@@ -37,6 +38,7 @@ export function Footer() {
           title="Explore"
           links={[
             { label: "Home", href: "/" },
+            { label: "โปรโมชั่น & โค้ดส่วนลด 🔥", href: "/promotions" },
             { label: "Shop All Snacks", href: "/shop" },
             { label: "Snack Finder (แนะนำขนม)", href: "/recommend" },
             { label: "สมัครสมาชิก NIBBLY", href: "/register" },
@@ -50,26 +52,24 @@ export function Footer() {
             { label: "Shipping Policy (ส่งฟรี >฿500)", href: "#" },
             { label: "Member Benefits (-15% Code)", href: "/register" },
             { label: "FAQ & Nutrition Guide", href: "/recommend" },
+            { label: "ระบบผู้ดูแล (Admin Portal)", href: "/admin" },
             { label: "Contact Us", href: "#contact" },
           ]}
         />
 
-        <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-[#FFD95A]">
-            <Sparkles size={13} />
-            <span>NIBBLY CLUB</span>
+        <div className="space-y-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-[#FFD95A]">
+              <Sparkles size={13} />
+              <span>NIBBLY CLUB</span>
+            </div>
+            <p className="mt-2 text-sm font-bold text-[#d8c66a]">SNACK HAPPY, LIVE HEALTHY.</p>
+            <p className="mt-1 text-xs leading-relaxed text-white/75">
+              รับสิทธิ์ส่วนลด 15% พร้อมขนมฟรีเดือนเกิด
+            </p>
           </div>
-          <p className="mt-3 text-sm font-bold text-[#d8c66a]">SNACK HAPPY, LIVE HEALTHY.</p>
-          <p className="mt-2 text-sm leading-relaxed text-white/75">
-            Made for bright mornings, busy afternoons and everything in between.
-          </p>
-          <Link
-            href="/register"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#FFD95A] px-4 py-2 text-xs font-bold text-[#354B2D] transition hover:bg-white"
-          >
-            <span>สมัครสมาชิก</span>
-            <span>→</span>
-          </Link>
+
+          <NewsletterSubscribeBox />
         </div>
       </div>
       <div className="border-t border-white/10 px-5 py-5 text-center text-xs text-white/55">
