@@ -21,13 +21,34 @@ import {
   TrendingUp,
   Clock,
   Layers,
+  Lock,
+  LogIn,
+  LogOut,
 } from "lucide-react";
 import { products } from "@/data/products";
+import { useAuth, ADMIN_EMAIL, ADMIN_PASSWORD } from "@/components/providers/auth-provider";
 
 export default function AdminPage() {
+  const { user, isAdmin, login, logout } = useAuth();
+  const [loginEmail, setLoginEmail] = useState(ADMIN_EMAIL);
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "members" | "subscribers" | "emails" | "products">("overview");
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    setIsLoggingIn(true);
+    const result = await login(loginEmail, "Admin NIBBLY", loginPassword);
+    setIsLoggingIn(false);
+    if (!result.success) {
+      setLoginError(result.message || "อีเมลหรือรหัสผ่านแอดมินไม่ถูกต้อง");
+    }
+  };
 
   // Email Test Form State
   const [testEmail, setTestEmail] = useState("atetfitqlpseo123@gmail.com");
@@ -132,6 +153,92 @@ export default function AdminPage() {
   const subscribers = data?.subscribers || [];
   const smtp = data?.smtp || { connected: true, user: "atetfitqlpseo123@gmail.com", host: "smtp.gmail.com:587" };
 
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#FFF0D4] via-[#FFF8E8] to-[#FAF7F0] flex items-center justify-center p-4">
+        <div className="relative w-full max-w-md rounded-3xl border-2 border-[#E8DCB8] bg-white p-8 shadow-2xl shadow-black/5">
+          <div className="text-center">
+            <span className="inline-flex size-16 items-center justify-center rounded-2xl bg-[#2D4125] text-3xl shadow-md text-[#FFD95A]">
+              👑
+            </span>
+            <h1 className="mt-4 font-display text-2xl font-black text-[#2D4125]">
+              NIBBLY Admin Portal
+            </h1>
+            <p className="mt-1 text-xs text-stone-500">
+              เข้าสู่ระบบเฉพาะผู้ดูแลร้านเพื่อจัดการคำสั่งซื้อและอีเมล
+            </p>
+          </div>
+
+          <form onSubmit={handleAdminLogin} className="mt-6 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-stone-700">
+                อีเมลผู้ดูแลระบบ (Admin Email)
+              </label>
+              <div className="relative mt-1">
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                  type="email"
+                  required
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="w-full rounded-2xl border border-stone-200 py-3 pl-10 pr-4 text-sm font-medium focus:border-[#2D4125] focus:outline-none"
+                  placeholder="atetfitqlpseo123@gmail.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-stone-700">
+                รหัสผ่าน (Password)
+              </label>
+              <div className="relative mt-1">
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                  type="password"
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="w-full rounded-2xl border border-stone-200 py-3 pl-10 pr-4 text-sm font-medium focus:border-[#2D4125] focus:outline-none"
+                  placeholder="กรอกรหัสผ่าน admin123"
+                />
+              </div>
+            </div>
+
+            {loginError && (
+              <div className="rounded-xl bg-red-50 p-3 text-xs font-bold text-red-600">
+                ⚠️ {loginError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#2D4125] py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#3D5A32] active:scale-95 disabled:opacity-50"
+            >
+              <LogIn size={16} />
+              <span>{isLoggingIn ? "กำลังตรวจสอบ..." : "เข้าสู่ระบบผู้ดูแลหลังบ้าน 🔐"}</span>
+            </button>
+          </form>
+
+          <div className="mt-5 rounded-2xl bg-[#F7F3EA] p-3.5 text-center text-[11px] text-[#7A6953]">
+            💡 บัญชีแอดมิน: <b className="text-[#2D4125]">{ADMIN_EMAIL}</b><br />
+            รหัสผ่าน: <b className="text-[#2D4125] font-mono">admin123</b>
+          </div>
+
+          <div className="mt-5 text-center">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-[#2D4125]"
+            >
+              <ArrowLeft size={14} />
+              <span>กลับสู่หน้าหลักร้านค้า</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF7F0] text-[#2D3748]">
       {/* Top Header */}
@@ -146,8 +253,8 @@ export default function AdminPage() {
               <span>หน้าร้าน</span>
             </Link>
             <div className="flex items-center gap-2">
-              <span className="flex size-9 items-center justify-center rounded-2xl bg-[#354B2D] text-lg font-black text-white shadow-sm">
-                🌿
+              <span className="flex size-9 items-center justify-center rounded-2xl bg-[#2D4125] text-lg font-black text-[#FFD95A] shadow-sm">
+                👑
               </span>
               <div>
                 <h1 className="text-base font-extrabold text-[#354B2D] leading-tight">
@@ -160,11 +267,26 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Admin Profile indicator */}
+            <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900">
+              <span>👑 {ADMIN_EMAIL}</span>
+            </div>
+
+            {/* Logout button */}
+            <button
+              onClick={logout}
+              className="flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-50 transition"
+              title="ออกจากระบบแอดมิน"
+            >
+              <LogOut size={13} />
+              <span>ออกระบบ</span>
+            </button>
+
             {/* SMTP Status */}
-            <div className="hidden sm:flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
+            <div className="hidden md:flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Gmail SMTP: {smtp.user}</span>
+              <span>Gmail SMTP: พร้อมใช้งาน</span>
             </div>
 
             <button

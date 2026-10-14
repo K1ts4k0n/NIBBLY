@@ -17,7 +17,7 @@ export function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { count, setOpen } = useCart();
   const { t, lang } = useLanguage();
-  const { user, isLoggedIn, logout } = useAuth();
+  const { user, isLoggedIn, isAdmin, logout } = useAuth();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -120,6 +120,17 @@ export function Navbar() {
               </Link>
             );
           })}
+
+          {/* Admin badge button only visible when logged in as admin */}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="group inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#2D4125] px-3.5 py-1.5 text-xs font-black text-[#FFD95A] shadow-md transition-all duration-200 hover:scale-105 hover:bg-[#3D5A32]"
+            >
+              <span className="text-sm">👑</span>
+              <span>{lang === "th" ? "ระบบหลังบ้าน" : "Admin"}</span>
+            </Link>
+          )}
         </nav>
 
         {/* Right actions */}
@@ -135,7 +146,7 @@ export function Navbar() {
                   className="flex items-center gap-1.5 rounded-full border border-[#d8c79e]/80 bg-white/90 px-3 py-1.5 text-xs font-bold text-[#354B2D] shadow-2xs transition hover:bg-white"
                 >
                   <span className="text-base leading-none">{user.avatar || "🍓"}</span>
-                  <span className="max-w-[100px] truncate">{lang === "th" ? "ข้อมูลของฉัน" : "My Profile"}</span>
+                  <span className="max-w-[100px] truncate">{isAdmin ? "Admin NIBBLY" : user.name}</span>
                   <ChevronDown size={14} className="text-stone-400" />
                 </button>
 
@@ -151,12 +162,25 @@ export function Navbar() {
                       <div className="border-b border-stone-100 px-3 py-2">
                         <p className="text-xs font-bold text-[#354B2D]">{user.name}</p>
                         <p className="truncate text-[10px] text-stone-500">{user.email}</p>
-                        <p className="mt-1 inline-block rounded bg-[#FFF0F3] px-2 py-0.5 text-[10px] font-bold text-[#FF718D]">
-                          {lang === "th" ? "สมาชิก NIBBLY" : "NIBBLY Member"}
+                        <p className={`mt-1 inline-block rounded px-2 py-0.5 text-[10px] font-bold ${
+                          isAdmin ? "bg-[#2D4125] text-[#FFD95A]" : "bg-[#FFF0F3] text-[#FF718D]"
+                        }`}>
+                          {isAdmin ? "👑 ผู้ดูแลระบบ (Admin)" : (lang === "th" ? "สมาชิก NIBBLY" : "NIBBLY Member")}
                         </p>
                       </div>
 
                       <div className="py-1">
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setUserDropdown(false)}
+                            className="flex items-center gap-2 rounded-xl bg-[#2D4125] px-3 py-2 text-xs font-bold text-[#FFD95A] transition hover:bg-[#3D5A32] mb-1"
+                          >
+                            <span>👑</span>
+                            <span>{lang === "th" ? "จัดการระบบหลังบ้าน (Admin)" : "Admin Dashboard"}</span>
+                          </Link>
+                        )}
+
                         <Link
                           href="/register"
                           onClick={() => setUserDropdown(false)}

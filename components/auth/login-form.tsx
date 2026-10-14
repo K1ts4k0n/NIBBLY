@@ -28,6 +28,12 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
     setError("");
   };
 
+  const handleAdminDemo = () => {
+    setEmail("atetfitqlpseo123@gmail.com");
+    setPassword("admin123");
+    setError("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -43,11 +49,11 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
 
     setIsLoading(true);
     try {
-      const ok = await login(email);
-      if (ok) {
+      const res = await login(email, undefined, password);
+      if (res.success) {
         onSuccess();
       } else {
-        setError(lang === "th" ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง" : "Invalid email or password");
+        setError(res.message || (lang === "th" ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง" : "Invalid email or password"));
       }
     } catch {
       setError(lang === "th" ? "เกิดข้อผิดพลาดในการเข้าสู่ระบบ" : "Login error. Please try again.");

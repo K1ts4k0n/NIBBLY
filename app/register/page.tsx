@@ -13,7 +13,7 @@ import { WelcomeDialog } from "@/components/auth/welcome-dialog";
 import { HEALTH_GOALS } from "@/data/health-recommendations";
 
 export default function RegisterPage() {
-  const { user, isLoggedIn, logout } = useAuth();
+  const { user, isLoggedIn, isAdmin, logout } = useAuth();
   const { lang } = useLanguage();
   const [activeTab, setActiveTab] = useState<"register" | "login">("register");
   const [showWelcome, setShowWelcome] = useState(false);
@@ -67,7 +67,7 @@ export default function RegisterPage() {
                 <div className="mt-4 flex-1 sm:mt-0">
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-[#354B2D]/10 px-3 py-0.5 text-xs font-bold text-[#354B2D]">
                     <UserCheck size={14} />
-                    <span>{lang === "th" ? "สมาชิก NIBBLY" : "NIBBLY Member"}</span>
+                    <span>{isAdmin ? "👑 ผู้ดูแลระบบ (Admin)" : (lang === "th" ? "สมาชิก NIBBLY" : "NIBBLY Member")}</span>
                   </div>
                   <h2 className="mt-1 font-display text-2xl font-bold text-[#354B2D]">
                     {user.name}
@@ -84,6 +84,26 @@ export default function RegisterPage() {
                   <span>{lang === "th" ? "ออกจากระบบ" : "Log out"}</span>
                 </button>
               </div>
+
+              {/* Admin Special Banner */}
+              {isAdmin && (
+                <div className="mt-6 rounded-2xl bg-[#2D4125] p-4 text-white shadow-md flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl">👑</span>
+                    <div>
+                      <p className="text-xs font-black text-[#FFD95A]">สิทธิ์ผู้ดูแลระบบ (Admin Access)</p>
+                      <p className="text-[11px] text-white/80">เข้าถึงระบบจัดการออเดอร์ อีเมล และสมาชิกหลังบ้าน</p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/admin"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#FFD95A] px-4 py-2 text-xs font-black text-[#2D4125] shadow-xs hover:bg-white transition"
+                  >
+                    <span>เปิดแผงควบคุมหลังบ้าน</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+              )}
 
               {/* Member Benefits 2 Core Items Grid */}
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
