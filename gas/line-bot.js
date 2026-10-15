@@ -2,19 +2,14 @@
  * ========================================================
  * 🥣 NIBBLY LINE Official Account Webhook (Google Apps Script)
  * ========================================================
- * "Snack Happy. Live Healthy."
  * สคริปต์ส่งปุ่มลัด (Quick Reply) แบบคีย์เวิร์ดข้อความ (type: message)
  * 
- * 📌 หลักการทำงาน:
- * 1. เมื่อลูกค้าพิมพ์ทักทาย เช่น "สวัสดี", "เมนู", "hi", "hello"
- * 2. บอทจะตอบข้อความต้อนรับ พร้อมแถบปุ่มลัด Quick Reply ด้านล่าง
- * 3. ปุ่มทุกปุ่มเป็น "type: message" (ไม่เด้งไปหน้าเว็บ)
- * 4. เมื่อลูกค้ากดปุ่ม จะส่งข้อความคีย์เวิร์ดนั้นเข้าไปในแชททันที
- * 5. ระบบตอบกลับอัตโนมัติ (Auto-response) ที่คุณตั้งไว้ใน LINE OA Manager จะตอบกลับตามคีย์เวิร์ดนั้นทันที!
- * ========================================================
+ * 📌 หมายเหตุ:
+ * ตามข้อกำหนดของ LINE API ปุ่ม Quick Reply จำเป็นต้องแนบไปกับข้อความอย่างน้อย 1 ข้อความเสมอ
+ * เราจึงย่อข้อความให้สั้นที่สุดเหลือเพียง "กดเลือกเมนูลัดด้านล่างได้เลยนะคะ 👇"
+ * เพื่อไม่ให้ซ้ำซ้อนกับข้อความทักทายที่คุณตั้งไว้ใน LINE OA ครับ
  */
 
-// 🔑 Channel Access Token ของคุณ
 var CHANNEL_ACCESS_TOKEN = 'OHrhVSfQ2sCTKCZswpADKdcbPbUaGMCRVTscmoRLZTDlHOHQMnTTzKf+pGY/opThzdQgJPl7RRNY93WMcVw7SNN3TdSuI0GGstwdgxCkNvnKNr5OLmc008C4SaDDXNZEQJj3A0+K75I2SzCjGtZE6AdB04t89/1O/w1cDnyilFU=';
 
 function doPost(e) {
@@ -26,13 +21,12 @@ function doPost(e) {
       return ContentService.createTextOutput("OK");
     }
 
-    // ตรวจสอบว่าเป็น Event ประเภทข้อความ (message) และเป็นตัวอักษร (text)
     if (event.type === 'message' && event.message.type === 'text') {
       var userMessage = event.message.text.trim();
       var replyToken = event.replyToken;
       var lowerMsg = userMessage.toLowerCase();
 
-      // เงื่อนไข: เมื่อผู้ใช้พิมพ์ทักทาย หรือต้องการดูเมนูคีย์ลัด
+      // เมื่อผู้ใช้พิมพ์ทักทาย หรือเรียกดูเมนู
       if (
         lowerMsg.includes("สวัสดี") ||
         lowerMsg.includes("ดีครับ") ||
@@ -43,12 +37,11 @@ function doPost(e) {
         lowerMsg === "menu" ||
         lowerMsg.includes("เมนู") ||
         lowerMsg.includes("เริ่ม") ||
-        lowerMsg.includes("คีย์ลัด") ||
-        lowerMsg.includes("สอบถาม")
+        lowerMsg.includes("คีย์ลัด")
       ) {
         var quickReplyMessage = {
           "type": "text",
-          "text": "สวัสดีค่ะ ยินดีต้อนรับสู่ NIBBLY Healthy Treats 🍓🥣✨\n\"Snack Happy. Live Healthy.\"\n\nสามารถเลือกกดปุ่มคีย์ลัดด้านล่าง เพื่อดูข้อมูลที่ต้องการได้เลยนะคะ 👇",
+          "text": "กดเลือกเมนูลัดด้านล่างได้เลยนะคะ 👇",
           "quickReply": {
             "items": [
               {
@@ -119,13 +112,9 @@ function doPost(e) {
           }
         };
 
-        // ส่งข้อความพร้อมปุ่มลัด Quick Reply กลับไป
         replyLine(replyToken, [quickReplyMessage]);
         return ContentService.createTextOutput("OK");
       }
-
-      // ถ้าเป็นข้อความอื่นๆ หรือเป็นคีย์เวิร์ดที่ตรงกับใน LINE OA
-      // ไม่ต้องตอบกลับจากสคริปต์นี้ เพื่อให้ระบบ Auto-response ของ LINE OA ตอบกลับเองโดยตรง
     }
   } catch (err) {
     console.error("Error in doPost: " + err.message);
@@ -134,9 +123,6 @@ function doPost(e) {
   return ContentService.createTextOutput("OK");
 }
 
-/**
- * ฟังก์ชันส่งข้อความกลับไปยัง LINE Messaging API
- */
 function replyLine(replyToken, messagesArray) {
   UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {
     'headers': {
